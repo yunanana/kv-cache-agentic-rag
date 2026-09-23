@@ -1,19 +1,89 @@
-<!doctype html><html lang='ko'><head><meta charset='utf-8'><title>KV cache 최적화 기술 다관점 평가 보고서</title><style>body{font-family:sans-serif;max-width:860px;margin:40px auto;line-height:1.6;padding:0 16px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bbb;padding:4px 8px;font-size:14px}th{background:#f0f0f0}</style></head><body><h1>KV cache 최적화 기술 다관점 평가 보고서</h1>
+<!doctype html><html lang='ko'><head><meta charset='utf-8'><title>KV cache 최적화 기술 다관점 평가 보고서</title><style>
+@page { size: A4; margin: 16mm 15mm 16mm 15mm; }
+:root {
+  --text: #37352f; --muted: #787774; --line: #e9e9e7; --bg-soft: #f7f6f3;
+  --blue-bg: #e7f3f8; --blue: #0b6e99;
+  --green-bg: #dbeddb; --green: #1c7a45; --orange-bg: #fadec9; --orange: #b45a1e;
+  --red-bg: #ffe2dd; --red: #c4382e; --gray-bg: #e3e2e0;
+}
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body {
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", -apple-system, sans-serif;
+  color: var(--text); font-size: 10pt; line-height: 1.65; margin: 0 auto; max-width: 860px;
+  word-break: keep-all; overflow-wrap: anywhere;
+}
+h1 { font-size: 22pt; font-weight: 700; line-height: 1.3; margin: 0 0 6px; letter-spacing: -0.02em; }
+h2 {
+  font-size: 14pt; font-weight: 700; margin: 26px 0 10px; padding-bottom: 6px;
+  border-bottom: 1px solid var(--line); break-after: avoid;
+}
+h3 { font-size: 11.5pt; font-weight: 600; margin: 18px 0 6px; break-after: avoid; }
+h4 { font-size: 10.5pt; font-weight: 600; margin: 14px 0 4px; color: var(--muted); break-after: avoid; }
+p { margin: 6px 0; }
+ul, ol { margin: 4px 0 8px; padding-left: 20px; }
+li { margin: 3px 0; }
+strong { font-weight: 600; }
+code { background: var(--bg-soft); border-radius: 4px; padding: 1px 4px; font-size: 90%; color: #eb5757; }
+
+.meta {
+  display: flex; flex-wrap: wrap; gap: 4px 18px; color: var(--muted); font-size: 9pt;
+  padding: 10px 0 14px; border-bottom: 1px solid var(--line); margin-bottom: 8px;
+}
+.meta b { color: var(--text); font-weight: 600; margin-right: 4px; }
+
+.callout {
+  display: flex; gap: 10px; background: var(--blue-bg); border-radius: 6px;
+  padding: 12px 16px 10px 12px; margin: 8px 0 14px; break-inside: avoid;
+}
+.callout .icon { font-size: 14pt; line-height: 1.4; }
+.callout ul { margin: 0; padding-left: 18px; }
+.callout li { margin: 4px 0; }
+
+table {
+  width: 100%; border-collapse: collapse; margin: 8px 0 12px; font-size: 8.4pt; line-height: 1.5;
+  break-inside: auto;
+}
+table.fixed { table-layout: fixed; }
+tr { break-inside: avoid; }
+th {
+  background: var(--bg-soft); color: var(--muted); font-weight: 600; text-align: left;
+  padding: 6px 6px; border: 1px solid var(--line); font-size: 7.8pt; overflow-wrap: normal;
+}
+td { padding: 6px 8px; border: 1px solid var(--line); vertical-align: top; }
+td.muted { color: var(--muted); white-space: nowrap; }
+td.center, th.center { text-align: center; }
+td.nowrap { font-weight: 500; }
+
+.pill {
+  display: inline-block; border-radius: 4px; padding: 1px 7px; font-weight: 600;
+  font-size: 8.2pt; white-space: nowrap;
+}
+.pill.high { background: var(--green-bg); color: var(--green); }
+.pill.mid { background: var(--orange-bg); color: var(--orange); }
+.pill.low { background: var(--red-bg); color: var(--red); }
+.pill.hold { background: var(--gray-bg); color: var(--muted); }
+
+.references ol { padding-left: 22px; }
+.references li { font-size: 8.2pt; color: var(--muted); margin: 3px 0; }
+.references a, a { color: var(--muted); text-decoration: underline; text-decoration-color: #c8c7c4; }
+.references a { word-break: break-all; }
+</style></head><body><h1>KV cache 최적화 기술 다관점 평가 보고서</h1><div class="meta"><span><b>작성</b>판교 6반 권유나</span><span><b>작성일</b>2026-09-23</span><span><b>평가 대상</b>TurboQuant vs ITME</span><span><b>평가 관점</b>시장성 · 도메인 적용</span><span><b>도메인</b>데이터센터·클라우드 LLM 서빙</span></div>
 <h2>SUMMARY</h2>
-<ul>
+<div class="callout"><div class="icon">💡</div><div><ul>
 <li>TurboQuant은 저자 보고 기준 Llama-3.1-8B-Instruct의 Needle-In-A-Haystack 실험에서 원본과 같은 리콜 0.997을 기록했다. 이는 해당 실험의 점수 유지이며 원본 데이터의 무손실 압축을 뜻하지 않는다[1, p.19]. ITME는 원본 KV를 유지하는 설계이나 정확도 측정 수치는 미보고다[2, p.2].</li>
 <li>두 기술 모두 공식 상용 제품이나 주요 LLM 서빙 스택의 기본 기능 탑재 근거는 확인되지 않았다. TurboQuant은 vLLM·SGLang 기반 구현·벤치마크 보고가 있으나 Google 실서비스 적용은 공개 근거가 없고[5], ITME는 프로토타입 단계다[2, p.1].</li>
 <li>TurboQuant의 메모리 축소는 비용 절감 가능성을 시사하지만 실제 운영 TCO 절감의 측정·검증과는 구분해야 한다[1, p.19]. 처리량·지연 오버헤드에 관한 웹 평가는 별도 환경의 간접 근거다[5].</li>
 <li>ITME는 저자 보고 기준 최대 35.7% 처리량 향상 결과가 있으나[2, p.1, p.11], 신규 하드웨어 및 시스템 통합이 필요하며 직접적인 비용 절감 수치는 논문에 제시되지 않았다.</li>
 <li>시장성 관점에서는 TurboQuant이 LLM 추론 최적화 SW 시장 내 간접적 성장 근거를, ITME는 CXL 메모리 확장 시장 내 AI/ML 추론 부문 성장 근거를 바탕으로 각각 중간·높음 등급을 받았다.</li>
 <li>두 기술은 기술적 조합 가능성이 있으나, 실제 통합의 필요성 및 효과는 별도 검토가 필요하며, 다양한 LLM 모델과 상용 환경에서의 장기 운영 검증 및 ROI 분석이 부족하다.</li>
-</ul>
+</ul></div></div>
 <h2>1. 분석 배경</h2>
 <p>LLM(대형 언어 모델) 추론에서 KV cache는 모델의 문맥 정보를 저장하는 핵심 메모리 구조로, 모델 크기와 문맥 길이가 증가함에 따라 KV cache 크기도 급격히 커져 메모리 사용량과 계산 속도의 병목이 된다[1, p.2]. 이 병목은 LLM 서빙 환경에서 처리량 저하, 지연 증가, 비용 상승으로 이어져 최적화가 필수적이다.</p>
 <p>KV cache 최적화는 크게 소프트웨어(SW)와 하드웨어(HW) 두 진영으로 나뉜다. SW 진영은 기존 GPU/HBM 인프라 위에서 데이터 압축·양자화 등으로 메모리 사용량을 줄이는 접근법이며, HW 진영은 CXL(Compute Express Link) 기반 분리형 메모리 확장 등으로 물리적 메모리 용량을 늘려 병목을 완화한다.</p>
 <p>이 두 접근법은 기술적 특성, 도입 방식, 비용 구조, 성능 영향 등에서 차이가 크므로, 시장성 및 도메인 적용 관점에서 다각도로 평가하여 상호 보완 가능성 및 한계점을 명확히 이해할 필요가 있다.</p>
 <h2>2. 기술 선정</h2>
-<table>
+<table class="fixed"><colgroup><col style="width:7%"><col style="width:13%"><col style="width:80%"></colgroup>
 <thead>
 <tr>
 <th>진영</th>
@@ -22,16 +92,8 @@
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>SW</td>
-<td>TurboQuant</td>
-<td>KV cache를 사후 3비트 수준으로 온라인 벡터 양자화하여 기존 GPU/HBM 인프라에서 SW만으로 적용 가능. Google Research 발표 후 산업계 반응 자료가 많아 시장성 평가 근거 확보에 유리함.</td>
-</tr>
-<tr>
-<td>HW</td>
-<td>ITME</td>
-<td>CXL 기반 분리형 하이브리드 메모리로 KV cache 원본 유지하며 용량 확장. SK hynix 제안, CXL 표준·제품화 흐름과 연계되어 시장성 근거 풍부하며, SW 압축과 정반대 방향으로 관점별 평가 대비가 명확함.</td>
-</tr>
+<tr><td class="center">SW</td><td class="nowrap">TurboQuant</td><td>KV cache를 사후 3비트 수준으로 온라인 벡터 양자화하여 기존 GPU/HBM 인프라에서 SW만으로 적용 가능. Google Research 발표 후 산업계 반응 자료가 많아 시장성 평가 근거 확보에 유리함.</td></tr>
+<tr><td class="center">HW</td><td class="nowrap">ITME</td><td>CXL 기반 분리형 하이브리드 메모리로 KV cache 원본 유지하며 용량 확장. SK hynix 제안, CXL 표준·제품화 흐름과 연계되어 시장성 근거 풍부하며, SW 압축과 정반대 방향으로 관점별 평가 대비가 명확함.</td></tr>
 </tbody>
 </table>
 <h2>3. 기술 개요</h2>
@@ -49,7 +111,7 @@
 </ul>
 <h2>4. 관점별 평가</h2>
 <h3>4.1 시장성 관점</h3>
-<table>
+<table class="fixed"><colgroup><col style="width:6%"><col style="width:10%"><col style="width:11%"><col style="width:7%"><col style="width:27%"><col style="width:8%"><col style="width:7%"><col style="width:24%"></colgroup>
 <thead>
 <tr>
 <th>기준 ID</th>
@@ -63,36 +125,9 @@
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>M1</td>
-<td>시장 규모·성장성</td>
-<td>중간</td>
-<td>중간</td>
-<td>인접 시장인 KV cache 오프로딩 인프라 시장이 2024년 18.7억 달러에서 2033년 149.9억 달러(CAGR 23.6%)로 전망됨(시장조사기관 추정)[3]. 양자화 SW 고유 시장 수치는 미확인</td>
-<td>높음</td>
-<td>중간</td>
-<td>CXL 메모리 확장 시장 2025년 13억 달러에서 2034년 118억 달러(CAGR 28.7%), 그중 AI/ML 추론 부문은 매출 비중 38.5%·CAGR 약 32.6% 전망(시장조사기관 추정)[4]. ITME 고유 시장 수치는 없음</td>
-</tr>
-<tr>
-<td>M2</td>
-<td>상용화·채택 현황</td>
-<td>중간</td>
-<td>중간</td>
-<td>논문은 단일 A100 실험[1, p.15]. vLLM·SGLang 기반 구현·벤치마크 보고는 있으나 Google 실서비스 적용은 공개 근거 없음[5]</td>
-<td>낮음</td>
-<td>높음</td>
-<td>FPGA·CMM 기반 프로토타입 단계[2, p.1]. 인접 제품인 CXL 기반 KV cache 서버(Penguin MemoryAI)는 출시됐으나 ITME 자체 제품 출시 근거는 없음[6]</td>
-</tr>
-<tr>
-<td>M3</td>
-<td>생태계 지지</td>
-<td>중간</td>
-<td>중간</td>
-<td>vLLM·SGLang 기반 구현·벤치마크 보고 존재[5]. 공식 기본 기능 탑재·표준화 근거는 미확인</td>
-<td>중간</td>
-<td>중간</td>
-<td>논문은 vLLM 기반으로 구현·평가[2, p.9]. 인접 CXL 메모리 제품(Astera Leo)은 vLLM·TensorRT-LLM·SGLang 연동을 내세우나 ITME 자체 공식 통합 근거는 미확인[7]</td>
-</tr>
+<tr><td class="center">M1</td><td class="nowrap">시장 규모·성장성</td><td><span class="pill mid">중간</span></td><td class="muted">중간</td><td>인접 시장인 KV cache 오프로딩 인프라 시장이 2024년 18.7억 달러에서 2033년 149.9억 달러(CAGR 23.6%)로 전망됨(시장조사기관 추정)[3]. 양자화 SW 고유 시장 수치는 미확인</td><td><span class="pill high">높음</span></td><td class="muted">중간</td><td>CXL 메모리 확장 시장 2025년 13억 달러에서 2034년 118억 달러(CAGR 28.7%), 그중 AI/ML 추론 부문은 매출 비중 38.5%·CAGR 약 32.6% 전망(시장조사기관 추정)[4]. ITME 고유 시장 수치는 없음</td></tr>
+<tr><td class="center">M2</td><td class="nowrap">상용화·채택 현황</td><td><span class="pill mid">중간</span></td><td class="muted">중간</td><td>논문은 단일 A100 실험[1, p.15]. vLLM·SGLang 기반 구현·벤치마크 보고는 있으나 Google 실서비스 적용은 공개 근거 없음[5]</td><td><span class="pill low">낮음</span></td><td class="muted">높음</td><td>FPGA·CMM 기반 프로토타입 단계[2, p.1]. 인접 제품인 CXL 기반 KV cache 서버(Penguin MemoryAI)는 출시됐으나 ITME 자체 제품 출시 근거는 없음[6]</td></tr>
+<tr><td class="center">M3</td><td class="nowrap">생태계 지지</td><td><span class="pill mid">중간</span></td><td class="muted">중간</td><td>vLLM·SGLang 기반 구현·벤치마크 보고 존재[5]. 공식 기본 기능 탑재·표준화 근거는 미확인</td><td><span class="pill mid">중간</span></td><td class="muted">중간</td><td>논문은 vLLM 기반으로 구현·평가[2, p.9]. 인접 CXL 메모리 제품(Astera Leo)은 vLLM·TensorRT-LLM·SGLang 연동을 내세우나 ITME 자체 공식 통합 근거는 미확인[7]</td></tr>
 </tbody>
 </table>
 <h4>해석</h4>
@@ -102,7 +137,7 @@
 <li><strong>생태계 지지</strong>: TurboQuant은 vLLM·SGLang 기반 구현이 보고됐으나 공식 기본 기능 탑재는 확인되지 않았다. ITME는 vLLM 기반 구현 외에 공식 다중 프레임워크 지원·표준화 참여 근거가 없다.</li>
 </ul>
 <h3>4.2 도메인 적용 관점: 데이터센터·클라우드 LLM 서빙</h3>
-<table>
+<table class="fixed"><colgroup><col style="width:6%"><col style="width:10%"><col style="width:11%"><col style="width:7%"><col style="width:27%"><col style="width:8%"><col style="width:7%"><col style="width:24%"></colgroup>
 <thead>
 <tr>
 <th>기준 ID</th>
@@ -116,46 +151,10 @@
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>D1</td>
-<td>비용 효율 (TCO)</td>
-<td>중간</td>
-<td>낮음</td>
-<td>메모리 축소는 비용 절감 가능성의 간접 근거이며 실제 운영 TCO 측정과 구분 필요[8][1, p.19]</td>
-<td>중간</td>
-<td>중간</td>
-<td>최대 35.7% 처리량 향상 보고, 신규 하드웨어 투자 필요[2, p.1]. 인접 기술 자료는 간접 근거[9]</td>
-</tr>
-<tr>
-<td>D2</td>
-<td>처리량·지연</td>
-<td>중간</td>
-<td>중간</td>
-<td>웹 자료가 인용한 vLLM 연구에서 FP8·BF16 대비 처리량 20~34% 저하, 최악 구성 지연 60~68% 증가, 대신 KV 용량 2.4~3.7배. 버스트 부하에서는 TTFT 급증을 막았다고 보고(2차 자료)[5]</td>
-<td>중간</td>
-<td>중간</td>
-<td>최대 35.7% 처리량 향상 및 지연 완화 보고, FPGA 오버헤드 및 인프라 조건 영향[2, p.11]</td>
-</tr>
-<tr>
-<td>D3</td>
-<td>품질 유지</td>
-<td>높음</td>
-<td>중간</td>
-<td>저자 보고 기준 Llama-3.1-8B-Instruct의 Needle-In-A-Haystack 실험에서 원본과 같은 리콜 0.997. 해당 실험의 점수 유지이며 무손실 압축의 입증은 아님[1, p.19]</td>
-<td>판단 유보</td>
-<td>중간</td>
-<td>KV cache 원본 유지 설계이나 정확도 측정 수치는 미보고[2, p.2]</td>
-</tr>
-<tr>
-<td>D4</td>
-<td>도입 용이성</td>
-<td>중간</td>
-<td>중간</td>
-<td>사전 학습·데이터 의존 튜닝 없는 온라인 방식[1, p.4]. 대규모 분산 환경 검증은 없음</td>
-<td>낮음</td>
-<td>중간</td>
-<td>CXL-하이브리드 메모리, RDMA 네트워크, FPGA 프리페처 등 신규 하드웨어와 시스템 통합 필요[2, p.2, p.8]. 인접 CXL KV cache 구성도 전용 CXL 메모리 컨트롤러를 요구[10]</td>
-</tr>
+<tr><td class="center">D1</td><td class="nowrap">비용 효율 (TCO)</td><td><span class="pill mid">중간</span></td><td class="muted">낮음</td><td>메모리 축소는 비용 절감 가능성의 간접 근거이며 실제 운영 TCO 측정과 구분 필요[8][1, p.19]</td><td><span class="pill mid">중간</span></td><td class="muted">중간</td><td>최대 35.7% 처리량 향상 보고, 신규 하드웨어 투자 필요[2, p.1]. 인접 기술 자료는 간접 근거[9]</td></tr>
+<tr><td class="center">D2</td><td class="nowrap">처리량·지연</td><td><span class="pill mid">중간</span></td><td class="muted">중간</td><td>웹 자료가 인용한 vLLM 연구에서 FP8·BF16 대비 처리량 20~34% 저하, 최악 구성 지연 60~68% 증가, 대신 KV 용량 2.4~3.7배. 버스트 부하에서는 TTFT 급증을 막았다고 보고(2차 자료)[5]</td><td><span class="pill mid">중간</span></td><td class="muted">중간</td><td>최대 35.7% 처리량 향상 및 지연 완화 보고, FPGA 오버헤드 및 인프라 조건 영향[2, p.11]</td></tr>
+<tr><td class="center">D3</td><td class="nowrap">품질 유지</td><td><span class="pill high">높음</span></td><td class="muted">중간</td><td>저자 보고 기준 Llama-3.1-8B-Instruct의 Needle-In-A-Haystack 실험에서 원본과 같은 리콜 0.997. 해당 실험의 점수 유지이며 무손실 압축의 입증은 아님[1, p.19]</td><td><span class="pill hold">판단 유보</span></td><td class="muted">중간</td><td>KV cache 원본 유지 설계이나 정확도 측정 수치는 미보고[2, p.2]</td></tr>
+<tr><td class="center">D4</td><td class="nowrap">도입 용이성</td><td><span class="pill mid">중간</span></td><td class="muted">중간</td><td>사전 학습·데이터 의존 튜닝 없는 온라인 방식[1, p.4]. 대규모 분산 환경 검증은 없음</td><td><span class="pill low">낮음</span></td><td class="muted">중간</td><td>CXL-하이브리드 메모리, RDMA 네트워크, FPGA 프리페처 등 신규 하드웨어와 시스템 통합 필요[2, p.2, p.8]. 인접 CXL KV cache 구성도 전용 CXL 메모리 컨트롤러를 요구[10]</td></tr>
 </tbody>
 </table>
 <h4>해석</h4>
@@ -176,42 +175,12 @@
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>비용 효율 (TCO) - TurboQuant</td>
-<td>메모리 축소를 통한 비용 절감 가능성은 간접 근거</td>
-<td>처리량·지연 오버헤드와 대규모 환경 적용 한계가 비용 효율성에 영향</td>
-<td>메모리 절감과 실제 운영 TCO의 측정·검증은 구분해야 함</td>
-</tr>
-<tr>
-<td>비용 효율 (TCO) - ITME</td>
-<td>대규모 메모리 확장과 처리량 향상으로 비용 절감 가능성 인정</td>
-<td>신규 하드웨어 투자와 시스템 복잡성으로 실제 비용 절감 확보 어려움</td>
-<td>시장은 성장 잠재력에 주목하나, 도메인은 초기 투자 부담과 통합 난이도에 주목</td>
-</tr>
-<tr>
-<td>처리량·지연 - TurboQuant</td>
-<td>일부 오버헤드 존재하나 SLO 유지 기여로 긍정적 평가</td>
-<td>명확한 처리량 저하 및 지연 증가로 비용·품질 부담으로 인식</td>
-<td>시장은 오버헤드를 허용 가능한 수준으로 보나, 도메인은 성능 저하를 부담으로 평가</td>
-</tr>
-<tr>
-<td>처리량·지연 - ITME</td>
-<td>하드웨어 기반 처리량 향상과 지연 완화 가능성 강조</td>
-<td>하드웨어 오버헤드와 인프라 조건에 따른 성능 변동성 문제로 인식</td>
-<td>시장은 하드웨어 성능 향상에 주목하나, 도메인은 환경 의존성 문제를 지적</td>
-</tr>
-<tr>
-<td>도입 용이성 - TurboQuant</td>
-<td>소프트웨어 변경만으로 도입 가능해 용이성 높음</td>
-<td>처리량·지연 저하 및 대규모 환경 검증 부족으로 제한적 가능성</td>
-<td>시장은 SW 접근의 도입 편의성에 주목하나, 도메인은 운영상 고려사항을 강조</td>
-</tr>
-<tr>
-<td>도입 용이성 - ITME</td>
-<td>신규 하드웨어 및 복잡한 시스템 통합 요구로 용이성 낮음</td>
-<td>도메인도 동일하게 신규 인프라 구축 필요성 인정</td>
-<td>시장과 도메인 모두 도입 복잡성에 대해 일치된 평가</td>
-</tr>
+<tr><td>비용 효율 (TCO) - TurboQuant</td><td>메모리 축소를 통한 비용 절감 가능성은 간접 근거</td><td>처리량·지연 오버헤드와 대규모 환경 적용 한계가 비용 효율성에 영향</td><td>메모리 절감과 실제 운영 TCO의 측정·검증은 구분해야 함</td></tr>
+<tr><td>비용 효율 (TCO) - ITME</td><td>대규모 메모리 확장과 처리량 향상으로 비용 절감 가능성 인정</td><td>신규 하드웨어 투자와 시스템 복잡성으로 실제 비용 절감 확보 어려움</td><td>시장은 성장 잠재력에 주목하나, 도메인은 초기 투자 부담과 통합 난이도에 주목</td></tr>
+<tr><td>처리량·지연 - TurboQuant</td><td>일부 오버헤드 존재하나 SLO 유지 기여로 긍정적 평가</td><td>명확한 처리량 저하 및 지연 증가로 비용·품질 부담으로 인식</td><td>시장은 오버헤드를 허용 가능한 수준으로 보나, 도메인은 성능 저하를 부담으로 평가</td></tr>
+<tr><td>처리량·지연 - ITME</td><td>하드웨어 기반 처리량 향상과 지연 완화 가능성 강조</td><td>하드웨어 오버헤드와 인프라 조건에 따른 성능 변동성 문제로 인식</td><td>시장은 하드웨어 성능 향상에 주목하나, 도메인은 환경 의존성 문제를 지적</td></tr>
+<tr><td>도입 용이성 - TurboQuant</td><td>소프트웨어 변경만으로 도입 가능해 용이성 높음</td><td>처리량·지연 저하 및 대규모 환경 검증 부족으로 제한적 가능성</td><td>시장은 SW 접근의 도입 편의성에 주목하나, 도메인은 운영상 고려사항을 강조</td></tr>
+<tr><td>도입 용이성 - ITME</td><td>신규 하드웨어 및 복잡한 시스템 통합 요구로 용이성 낮음</td><td>도메인도 동일하게 신규 인프라 구축 필요성 인정</td><td>시장과 도메인 모두 도입 복잡성에 대해 일치된 평가</td></tr>
 </tbody>
 </table>
 <h3>두 기술의 인식 차이</h3>
@@ -221,16 +190,16 @@
 <h2>6. 한계점</h2>
 <p>본 보고서는 공개된 논문 및 웹 자료를 기반으로 평가하였으며, 각 기술의 저자 자체 실험 결과에 의존하는 부분이 많다. 공개 정보의 한계로 인해 상용화 현황, 대규모 분산 환경 적용, 다양한 하드웨어 플랫폼에서의 성능 검증 등에서 정보가 부족하다. 확증편향 방지를 위해 다수 출처를 교차 검증하고, 기술별 주장과 반대 근거를 균형 있게 반영하였다.</p>
 <p>본 보고서는 멀티 에이전트 시스템이 생성한 초안의 자동 검토 미통과 항목에 대해 AI 도구로 논문·웹 출처를 대조하고 정정한 정정본이다. 이는 독립적인 사람 검수나 자동 검토 통과를 의미하지 않는다. 웹 출처는 대부분 블로그·시장조사 요약 등 2차 자료이며, 시장 규모 수치는 조사기관의 추정치다.</p>
-<h2>REFERENCE</h2>
+<h2>REFERENCE</h2><div class="references">
 <ol>
-<li>Zandieh, A., Daliri, M., Hadian, M., &amp; Mirrokni, V.(2025). TurboQuant: Online Vector Quantization with Near-optimal Distortion Rate. <em>arXiv</em>, 2504.19874. https://arxiv.org/abs/2504.19874</li>
-<li>Jang, H., Min, Y., Kim, S., Ahn, T., Kim, H., Joo, Y., Kim, H., &amp; Kim, J.(2026). ITME: Inference Tiered Memory Expansion with Disaggregated CXL-Hybrid Memories. <em>arXiv</em>, 2606.12556. https://arxiv.org/abs/2606.12556</li>
-<li>growthmarketreports.com(n.d.). <em>KV-Cache Offloading Infrastructure Market Research Report 2033</em>. growthmarketreports.com, https://growthmarketreports.com/report/kv-cache-offloading-infrastructure-market</li>
-<li>marketintelo.com(n.d.). <em>CXL Memory Expansion Market Research Report 2034</em>. marketintelo.com, https://marketintelo.com/report/cxl-memory-expansion-market</li>
-<li>o-mega.ai(n.d.). <em>Google TurboQuant in August 2026: Where It Actually Runs</em>. o-mega.ai, https://o-mega.ai/articles/google-turboquant-the-2026-llm-compression-guide</li>
-<li>stocktitan.net(n.d.). <em>Penguin Solutions Introduces Industry's First Production-Ready CXL-Based KV Cache Server</em>. stocktitan.net, https://www.stocktitan.net/news/PENG/penguin-solutions-introduces-industry-s-first-production-ready-cxl-pxfpc1e4d2nz.html</li>
-<li>asteralabs.com(n.d.). <em>How CXL Memory Expansion Improves AI Economics</em>. asteralabs.com, https://www.asteralabs.com/resources/blog/inference-tokenomics-how-cxl-memory-expansion-improves-ai-economics</li>
-<li>spheron.network(n.d.). <em>Google TurboQuant: 6x KV Cache Compression for LLM ...</em>. spheron.network, https://www.spheron.network/blog/google-turboquant-llm-compression-gpu-cloud</li>
-<li>ownyourai.com(n.d.). <em>CXL-SpecKV: A Disaggregated FPGA Speculative KV-Cache for Datacenter LLM Serving – Own Your AI</em>. ownyourai.com, https://ownyourai.com/cxl-speckv-a-disaggregated-fpga-speculative-kv-cache-for-datacenter-llm-serving</li>
-<li>asteralabs.com(n.d.). <em>How CXL Transforms RAG and KV Cache Performance</em>. asteralabs.com, https://www.asteralabs.com/resources/blog/breaking-through-the-memory-wall-how-cxl-transforms-rag-and-kv-cache-performance</li>
-</ol></body></html>
+<li>Zandieh, A., Daliri, M., Hadian, M., &amp; Mirrokni, V.(2025). TurboQuant: Online Vector Quantization with Near-optimal Distortion Rate. <em>arXiv</em>, 2504.19874. <a href="https://arxiv.org/abs/2504.19874">https://arxiv.org/abs/2504.19874</a></li>
+<li>Jang, H., Min, Y., Kim, S., Ahn, T., Kim, H., Joo, Y., Kim, H., &amp; Kim, J.(2026). ITME: Inference Tiered Memory Expansion with Disaggregated CXL-Hybrid Memories. <em>arXiv</em>, 2606.12556. <a href="https://arxiv.org/abs/2606.12556">https://arxiv.org/abs/2606.12556</a></li>
+<li>growthmarketreports.com(n.d.). <em>KV-Cache Offloading Infrastructure Market Research Report 2033</em>. growthmarketreports.com, <a href="https://growthmarketreports.com/report/kv-cache-offloading-infrastructure-market">https://growthmarketreports.com/report/kv-cache-offloading-infrastructure-market</a></li>
+<li>marketintelo.com(n.d.). <em>CXL Memory Expansion Market Research Report 2034</em>. marketintelo.com, <a href="https://marketintelo.com/report/cxl-memory-expansion-market">https://marketintelo.com/report/cxl-memory-expansion-market</a></li>
+<li>o-mega.ai(n.d.). <em>Google TurboQuant in August 2026: Where It Actually Runs</em>. o-mega.ai, <a href="https://o-mega.ai/articles/google-turboquant-the-2026-llm-compression-guide">https://o-mega.ai/articles/google-turboquant-the-2026-llm-compression-guide</a></li>
+<li>stocktitan.net(n.d.). <em>Penguin Solutions Introduces Industry's First Production-Ready CXL-Based KV Cache Server</em>. stocktitan.net, <a href="https://www.stocktitan.net/news/PENG/penguin-solutions-introduces-industry-s-first-production-ready-cxl-pxfpc1e4d2nz.html">https://www.stocktitan.net/news/PENG/penguin-solutions-introduces-industry-s-first-production-ready-cxl-pxfpc1e4d2nz.html</a></li>
+<li>asteralabs.com(n.d.). <em>How CXL Memory Expansion Improves AI Economics</em>. asteralabs.com, <a href="https://www.asteralabs.com/resources/blog/inference-tokenomics-how-cxl-memory-expansion-improves-ai-economics">https://www.asteralabs.com/resources/blog/inference-tokenomics-how-cxl-memory-expansion-improves-ai-economics</a></li>
+<li>spheron.network(n.d.). <em>Google TurboQuant: 6x KV Cache Compression for LLM ...</em>. spheron.network, <a href="https://www.spheron.network/blog/google-turboquant-llm-compression-gpu-cloud">https://www.spheron.network/blog/google-turboquant-llm-compression-gpu-cloud</a></li>
+<li>ownyourai.com(n.d.). <em>CXL-SpecKV: A Disaggregated FPGA Speculative KV-Cache for Datacenter LLM Serving – Own Your AI</em>. ownyourai.com, <a href="https://ownyourai.com/cxl-speckv-a-disaggregated-fpga-speculative-kv-cache-for-datacenter-llm-serving">https://ownyourai.com/cxl-speckv-a-disaggregated-fpga-speculative-kv-cache-for-datacenter-llm-serving</a></li>
+<li>asteralabs.com(n.d.). <em>How CXL Transforms RAG and KV Cache Performance</em>. asteralabs.com, <a href="https://www.asteralabs.com/resources/blog/breaking-through-the-memory-wall-how-cxl-transforms-rag-and-kv-cache-performance">https://www.asteralabs.com/resources/blog/breaking-through-the-memory-wall-how-cxl-transforms-rag-and-kv-cache-performance</a></li>
+</ol></div></body></html>

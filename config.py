@@ -16,6 +16,9 @@ EVAL_DIR = DATA_DIR / "eval"
 MODEL_CACHE_DIR = DATA_DIR / "models"
 OUTPUT_DIR = ROOT / "outputs"
 
+# ── 보고서 표기 ───────────────────────────────────────
+REPORT_AUTHOR = os.getenv("REPORT_AUTHOR", "판교 6반 권유나")
+
 # ── LLM ───────────────────────────────────────────────
 LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4.1-mini")      # 조사·평가·보고서 생성
 JUDGE_MODEL = os.getenv("JUDGE_MODEL", "gpt-4.1-mini")  # 관련성 판정·보고서 검토

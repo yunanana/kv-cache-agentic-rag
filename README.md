@@ -53,7 +53,7 @@ Multi-Agent + Agentic RAG 시스템입니다. 특정 기술을 추천하거나 �
 | Retrieval | FAISS + BM25 Hybrid (RRF) - **Hit Rate@5 0.967, MRR@5 0.917** |
 | Embedding | `snowflake/snowflake-arctic-embed-s` (오픈소스, fastembed/ONNX 로컬 추론) |
 | Web Search | Tavily |
-| Report | Markdown → HTML → PDF (fpdf2) |
+| Report | Markdown → 노션 스타일 HTML(CSS) → PDF (headless Chrome 인쇄, Chrome이 없으면 fpdf2로 대체) |
 
 ### Embedding 모델 선정
 리더보드 순위 대신 **실제 문서로 만든 평가셋에서 측정한 결과**로 선정했습니다 (`scripts/eval_retrieval.py`).
