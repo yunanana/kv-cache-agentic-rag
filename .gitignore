@@ -1,0 +1,15 @@
+# secrets
+.env
+
+# python
+.venv/
+__pycache__/
+*.pyc
+
+# data (논문 PDF는 저작권상 미포함 - scripts/download_papers.py 로 다운로드)
+data/papers/
+data/models/
+data/index/
+
+# os
+.DS_Store

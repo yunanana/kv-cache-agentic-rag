@@ -1,0 +1,152 @@
+[
+ {
+  "question": "How did Zador's high-resolution methods contribute to the development of fixed-rate vector quantization compared to Shannon's distortion-rate function?",
+  "gold_id": 15,
+  "tech": "sw"
+ },
+ {
+  "question": "How does vector quantization reduce distortion when compressing high-dimensional vectors into low-bitwidth integers for efficient indexing in AI and search systems?",
+  "gold_id": 3,
+  "tech": "sw"
+ },
+ {
+  "question": "How does applying a random rotation matrix generated via QR decomposition on a Gaussian matrix enable the design of scalar quantizers for high-dimensional vectors by making their coordinates nearly independent and Beta-distributed?",
+  "gold_id": 39,
+  "tech": "sw"
+ },
+ {
+  "question": "How does the two-stage quantization algorithm combine an MSE-optimal quantizer and the Quantized Johnson-Lindenstrauss method to achieve unbiased inner product estimates at low bit-widths?",
+  "gold_id": 34,
+  "tech": "sw"
+ },
+ {
+  "question": "How does the Shannon Lower Bound characterize the minimum achievable mean-squared error distortion for a d-dimensional source given a total bit budget?",
+  "gold_id": 30,
+  "tech": "sw"
+ },
+ {
+  "question": "How does the QJL quantization method achieve unbiased inner product estimates without requiring data-dependent tuning?",
+  "gold_id": 18,
+  "tech": "sw"
+ },
+ {
+  "question": "How can we design computationally efficient quantizers that minimize mean squared error and ensure unbiased inner product estimates for given bit-width constraints?",
+  "gold_id": 13,
+  "tech": "sw"
+ },
+ {
+  "question": "How does TurboQuant's KV cache compression performance compare to other methods on Llama-3.1-8B-Instruct across different tasks in the LongBench-V1 benchmark?",
+  "gold_id": 80,
+  "tech": "sw"
+ },
+ {
+  "question": "How does the proposed quantization method achieve provably optimal distortion bounds for both mean squared error and inner product preservation compared to existing techniques, particularly in relation to bit-width usage?",
+  "gold_id": 11,
+  "tech": "sw"
+ },
+ {
+  "question": "How do the experimental results using the DBpedia Entities dataset and OpenAI embeddings support the theoretical error bounds stated in Theorem 1 and Theorem 2?",
+  "gold_id": 60,
+  "tech": "sw"
+ },
+ {
+  "question": "How does preserving mean-squared error or inner product properties in vector quantization enable faster and more resource-efficient inner product queries?",
+  "gold_id": 4,
+  "tech": "sw"
+ },
+ {
+  "question": "How does the FlashAttention-3 method improve the speed and accuracy of attention mechanisms using asynchrony and low-precision computations?",
+  "gold_id": 98,
+  "tech": "sw"
+ },
+ {
+  "question": "How does TurboQuant's recall ratio at top-k compare to Product Quantization and RabitQ when quantizing the training set of the dataset?",
+  "gold_id": 78,
+  "tech": "sw"
+ },
+ {
+  "question": "How does the distribution of a single coordinate of a uniformly random point on a high-dimensional unit hypersphere relate to the Beta and normal distributions?",
+  "gold_id": 29,
+  "tech": "sw"
+ },
+ {
+  "question": "How does Gemini 1.5 handle multimodal inputs to process millions of tokens in context effectively?",
+  "gold_id": 100,
+  "tech": "sw"
+ },
+ {
+  "question": "How does the system leverage idle times during the decode phase to optimize data updates in CXL-hybrid memory without impacting inference read throughput?",
+  "gold_id": 170,
+  "tech": "hw"
+ },
+ {
+  "question": "How does ITME's performance and hit rate compare to a local NVMe-oF baseline when the CPU-offload baseline runs out of memory beyond turn 21?",
+  "gold_id": 184,
+  "tech": "hw"
+ },
+ {
+  "question": "How does managing large key-value cache footprints beyond host memory limits contribute to throughput improvements in large language model inference systems?",
+  "gold_id": 108,
+  "tech": "hw"
+ },
+ {
+  "question": "How does the ITME system's performance vary when using Llama-3.1 models of different sizes on multi-turn conversation workloads from the ShareGPT dataset?",
+  "gold_id": 177,
+  "tech": "hw"
+ },
+ {
+  "question": "How does ITME optimize PCIe bandwidth utilization for transferring model weights and prefix KV cache during execution?",
+  "gold_id": 130,
+  "tech": "hw"
+ },
+ {
+  "question": "How does ITME utilize CXL-hybrid memory and multi-tier DMA prefetching to overcome memory capacity and I/O limitations in large-scale LLM inference?",
+  "gold_id": 200,
+  "tech": "hw"
+ },
+ {
+  "question": "How does ITME's pipelined prefetching impact the performance overheads caused by storage and network latency when running large models that exceed the CXL-hybrid memory DRAM cache capacity?",
+  "gold_id": 190,
+  "tech": "hw"
+ },
+ {
+  "question": "How does the ITME architecture integrate with existing multi-tier cache management and memory paging policies to improve key-value cache reuse and reduce access latency?",
+  "gold_id": 197,
+  "tech": "hw"
+ },
+ {
+  "question": "How does ITME maintain a stable GPU memory footprint compared to recomputation and all-caching methods when running Llama-3.1 models of different sizes?",
+  "gold_id": 175,
+  "tech": "hw"
+ },
+ {
+  "question": "How does interleaving regulated write operations during the decode phase help maintain peak read bandwidth in SSDs?",
+  "gold_id": 159,
+  "tech": "hw"
+ },
+ {
+  "question": "How does the CXL-hybrid memory architecture integrate NVMe SSD and DRAM cache to create a unified, byte-addressable memory space that maximizes PCIe bandwidth utilization?",
+  "gold_id": 134,
+  "tech": "hw"
+ },
+ {
+  "question": "How does the ITME method manage data prefetching and caching across CPU and GPU in a CXL-hybrid memory system?",
+  "gold_id": 163,
+  "tech": "hw"
+ },
+ {
+  "question": "How does ITME's use of CXL-hybrid memory and host memory staging buffer improve inference efficiency compared to CPU-offload and recomputation baselines in a 35-turn, 256-conversation benchmark?",
+  "gold_id": 181,
+  "tech": "hw"
+ },
+ {
+  "question": "How does the system design ensure balanced throughput between Host-to-DRAM and SSD-to-DRAM paths to prevent bottlenecks and achieve full line-rate utilization of high-speed host interconnects?",
+  "gold_id": 141,
+  "tech": "hw"
+ },
+ {
+  "question": "How does offloading NVMe-over-Fabrics target functionality to SmartNICs improve system performance in storage networks?",
+  "gold_id": 217,
+  "tech": "hw"
+ }
+]

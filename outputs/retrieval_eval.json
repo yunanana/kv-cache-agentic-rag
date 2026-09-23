@@ -1,0 +1,32 @@
+{
+ "Dense \u00b7 BAAI/bge-small-en-v1.5": {
+  "Hit@1": 0.6,
+  "Hit@3": 0.733,
+  "Hit@5": 0.8,
+  "MRR@5": 0.678
+ },
+ "Dense \u00b7 sentence-transformers/all-MiniLM-L6-v2": {
+  "Hit@1": 0.6,
+  "Hit@3": 0.733,
+  "Hit@5": 0.767,
+  "MRR@5": 0.669
+ },
+ "Dense \u00b7 snowflake/snowflake-arctic-embed-s": {
+  "Hit@1": 0.733,
+  "Hit@3": 0.933,
+  "Hit@5": 1.0,
+  "MRR@5": 0.844
+ },
+ "Sparse \u00b7 BM25": {
+  "Hit@1": 0.867,
+  "Hit@3": 0.933,
+  "Hit@5": 0.967,
+  "MRR@5": 0.901
+ },
+ "Hybrid \u00b7 BM25 + snowflake/snowflake-arctic-embed-s": {
+  "Hit@1": 0.867,
+  "Hit@3": 0.967,
+  "Hit@5": 0.967,
+  "MRR@5": 0.917
+ }
+}

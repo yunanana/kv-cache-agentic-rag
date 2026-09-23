@@ -1,0 +1,1415 @@
+{
+ "tech_profiles": {
+  "sw": {
+   "one_liner": "TurboQuant은 LLM 추론 시 KV 캐시 메모리 압박을 줄이기 위해 온라인 벡터 양자화를 적용하는 기술이다.",
+   "problem_addressed": "LLM 추론에서 KV 캐시 크기가 모델 크기와 문맥 길이에 따라 크게 증가하여 메모리 사용과 계산 속도에 병목을 초래하는 문제를 해결한다.",
+   "core_mechanism": [
+    "내적 왜곡을 최소화하는 온라인 벡터 양자화 기법을 사용한다.",
+    "데이터 의존적 튜닝 없이 즉시 적용 가능한 데이터-불가지론적 1비트 양자화 기법(QJL) 기술을 활용한다.",
+    "기존의 오프라인 PQ 방식과 달리 사전 학습이나 복잡한 전처리 없이 실시간으로 양자화한다."
+   ],
+   "reported_results": [
+    "Llama-3.1-8B-Instruct 모델에서 4배 압축(메모리 25% 사용) 시에도 원본 모델과 동일한 성능(리콜 점수)을 달성했다.",
+    "NVIDIA A100 GPU 환경에서 4k~104k 토큰 길이의 긴 문맥 처리 실험을 수행했다."
+   ],
+   "limitations": [
+    "온라인 설정에 적합하나, 실험은 단일 NVIDIA A100 GPU 환경에서 수행되어 하드웨어 및 평가 모델 규모, 벤치마크 범위 등 실험 범위상 제약이 존재한다."
+   ],
+   "deployment_requirements": [
+    "NVIDIA A100 GPU에서 실험되었으며, 고성능 GPU 환경이 요구된다.",
+    "데이터 의존적 튜닝이 필요 없으나, 내적 왜곡 최소화를 위한 양자화 알고리즘 구현이 필요하다."
+   ]
+  },
+  "hw": {
+   "one_liner": "ITME는 CXL-하이브리드 메모리를 활용해 대규모 LLM 추론의 KV 캐시 메모리 용량 문제를 해결하는 계층형 메모리 확장 아키텍처다.",
+   "problem_addressed": "대규모 LLM 추론에서 KV 캐시의 거대한 메모리 용량 요구와 이를 호스트 메모리 한계 내에 수용하기 어려운 문제를 해결한다.",
+   "core_mechanism": [
+    "CXL-하이브리드 메모리를 기반으로 한 TB급 계층형 메모리 확장 아키텍처를 제안한다.",
+    "원격 메모리 영역을 바이트 주소 지정 가능한 메모리로 구성해 GPU 서버가 RDMA 프로토콜로 대용량 모델 가중치와 KV 캐시에 접근 가능하게 한다.",
+    "내부 하드웨어 수준 프리페처를 설계해 NVMe SSD에서 DRAM 캐시로 데이터를 미리 가져와 저장소 지연을 숨긴다.",
+    "사용자 수준 프리페처 API를 제공해 LLM 추론 프레임워크가 데이터 전송을 명시적으로 제어하고 PCIe 대역폭을 최대한 활용하도록 한다.",
+    "멀티티어 DMA 기반 파이프라인을 통해 네트워크 및 저장소 접근 지연을 겹치게 하여 총 지연을 효과적으로 마스킹한다."
+   ],
+   "reported_results": [
+    "SK hynix CMM과 PCIe Gen5 NVMe SSD를 사용한 저자 자체 실험에서 최대 35.7% 추론 처리량 향상을 달성했다.",
+    "FPGA 기반 프로토타입에서 DRAM 캐시 히트 시 읽기 18GB/s, 쓰기 12GB/s 대역폭을 기록해 CMM 기반 평가 대비 20~25% 성능 차이를 보였다.",
+    "Llama-3.1 8B 및 70B 모델과 ShareGPT 데이터셋을 활용한 다중 대화 평가에서 CPU 오프로딩 대비 유사하거나 우수한 성능을 보였다."
+   ],
+   "limitations": [
+    "활성화 및 작업 중인 KV 캐시처럼 예측 불가능하거나 지연에 민감한 데이터는 GPU 또는 호스트 메모리에 유지해야 하며, ITME는 주로 예측 가능하고 대용량인 모델 가중치와 장기 컨텍스트 KV 캐시에 적합하다.",
+    "FPGA 프로토타입은 CMM 기반 평가 대비 하드웨어 오버헤드로 인해 성능이 다소 낮아 실제 구현 시 성능 저하 가능성이 존재한다.",
+    "실험은 특정 하드웨어 구성(예: SK hynix CMM, PCIe Gen5, NVIDIA A100 GPU)과 Llama-3.1 모델에 한정되어 있어 다른 환경에서의 일반화는 판단 유보."
+   ],
+   "deployment_requirements": [
+    "CXL-하이브리드 메모리 장치와 PCIe Gen5 인터페이스를 지원하는 하드웨어가 필요하다.",
+    "FPGA 기반 하드웨어 프로토타입 또는 유사한 하드웨어 수준 프리페처 구현이 요구된다.",
+    "GPU 서버와 원격 메모리 서버 간 고속 RDMA 통신을 위한 100Gbps 이상 네트워크 인프라가 필요하다.",
+    "LLM 추론 프레임워크에서 사용자 수준 프리페처 API를 활용할 수 있어야 한다."
+   ]
+  }
+ },
+ "market_eval": {
+  "sw": {
+   "assessments": [
+    {
+     "criterion_id": "M1",
+     "criterion": "시장 규모·성장성",
+     "rating": "높음",
+     "rationale": "TurboQuant이 속한 LLM 추론 최적화 소프트웨어 시장과 CXL 기반 메모리 확장 하드웨어 시장은 2026년 이후 KV Cache 메모리 병목 문제 해결을 위한 수요 증가와 함께 뚜렷한 성장세가 관찰된다. TrendForce 보고서에서는 KV Cache 수요 증가와 이를 완화하는 CXL 확장 및 압축 기술이 시장에 큰 영향을 미치고 있음을 명확히 하며, NVIDIA, Google 등 주요 기업들이 KV Cache 압축 기술을 도입 중임을 확인할 수 있다. 또한, 논문에서는 LLM 추론에서 KV Cache 크기 증가가 메모리 및 계산 속도 병목으로 작용하며, 이를 줄이기 위한 벡터 양자화 기술의 중요성을 강조한다. 따라서 TurboQuant이 해결하는 문제는 시장에서 중요한 성장 동인으로 인식되고 있다.",
+     "supporting_evidence": [
+      "[P-SW p.2] LLM 추론에서 KV Cache 크기 증가가 메모리 및 계산 속도 병목 문제임을 기술",
+      "[WM4] TrendForce 보고서에서 KV Cache 수요 증가와 CXL 및 압축 기술의 시장 영향 분석",
+      "[WM6] NVIDIA의 KV Cache 양자화 기술 도입 사례",
+      "[WM14] Google TurboQuant의 2026년 상용화 및 시장 영향",
+      "[WM16] TurboQuant이 KV Cache 메모리 문제를 해결하는 혁신 기술임을 산업계에서 평가"
+     ],
+     "counter_evidence": [
+      "KV Cache 양자화가 주의가 필요한 기술로, 과도한 압축 시 모델 신뢰성 저하 위험 존재 [WM10, WM12]",
+      "실험은 단일 NVIDIA A100 GPU 환경에 국한되어 하드웨어 및 평가 모델 규모에 제약 존재 [P-SW p.2]"
+     ],
+     "confidence": "중간"
+    },
+    {
+     "criterion_id": "M2",
+     "criterion": "상용화·채택 현황",
+     "rating": "중간",
+     "rationale": "TurboQuant은 2026년 Google Research에서 공식 발표되어 ICLR 2026 등 학술적 검증을 거치고 있으며, Google의 대규모 LLM 배포 환경에서 실제 적용 사례가 보고되고 있다. 또한, NVFP4, AWQ 등 다른 압축 기술과 함께 복합적으로 사용되어 대규모 모델의 메모리 사용량을 크게 줄이는 효과가 확인되었다. 그러나 현재까지는 Google 중심의 상용화 사례가 주로 보고되며, 타 기업이나 오픈소스 커뮤니티에서의 광범위한 채택 사례는 제한적이다. 따라서 시제품 또는 일부 상용 환경에서 운영 중인 단계로 평가된다.",
+     "supporting_evidence": [
+      "[P-SW p.15] TurboQuant의 이론적 근거와 단일 NVIDIA A100 GPU 환경에서의 실험 결과",
+      "[WM14] Google TurboQuant이 2026년 중대형 LLM 배포에 적용 중임 보고",
+      "[WM15] TurboQuant이 KV Cache 압축 문제를 해결하는 주요 기술로 평가받음",
+      "[WM16] Google의 TurboQuant 공식 발표 및 상용화 현황",
+      "[WM19] TurboQuant가 메모리 병목 문제 해결에 기여하며 산업계 주목"
+     ],
+     "counter_evidence": [
+      "상용화가 Google 중심으로 제한적이며, 타 벤더나 오픈소스 통합 사례는 아직 미흡",
+      "실험 환경이 제한적이고, 다양한 하드웨어 및 모델 규모에서의 검증 부족"
+     ],
+     "confidence": "중간"
+    },
+    {
+     "criterion_id": "M3",
+     "criterion": "생태계 지지",
+     "rating": "중간",
+     "rationale": "KV Cache 양자화 및 압축 기술은 여러 연구 논문에서 다양한 기법으로 다뤄지고 있으며, QJL과 같은 데이터 불가지론적 1비트 양자화 기법이 TurboQuant에 활용되고 있다. 주요 오픈소스 LLM 추론 프레임워크(vLLM, SGLang, TensorRT-LLM)에서는 KV Cache 관리 및 양자화 기능을 지원하고 있으나, TurboQuant 자체가 복수 주요 프레임워크에 직접 통합되었다는 명확한 근거는 부족하다. 또한, CXL 기반 KV Cache 서버 등 하드웨어 벤더들의 참여가 활발하나, TurboQuant가 표준화된 산업 표준으로 자리잡았다는 근거는 아직 미흡하다. 따라서 일부 커뮤니티 구현과 표준 논의가 진행 중인 단계로 평가된다.",
+     "supporting_evidence": [
+      "[P-SW p.4] QJL 1비트 양자화 기법과 온라인 데이터 불가지론적 양자화 기술 활용",
+      "[WM23] vLLM, SGLang, TensorRT-LLM 등 주요 LLM 추론 프레임워크에서 KV Cache 양자화 지원",
+      "[WM13, WM26] Penguin Solutions 등 CXL 기반 KV Cache 서버 하드웨어 벤더 참여",
+      "[WM25] LMcache 오픈소스 KV Cache 라이브러리와 다양한 산업 파트너 참여"
+     ],
+     "counter_evidence": [
+      "TurboQuant이 복수 주요 프레임워크에 직접 통합되었다는 명확한 공개 근거 부족",
+      "산업 표준화 동향이나 공식 표준 채택 사례는 확인되지 않음"
+     ],
+     "confidence": "중간"
+    }
+   ],
+   "overall_view": "TurboQuant은 LLM 추론에서 KV Cache 메모리 병목 문제를 해결하는 혁신적인 벡터 양자화 기술로, 2026년을 기점으로 Google을 중심으로 상용화가 진행 중이며, 시장에서는 KV Cache 압축 및 메모리 확장 기술 수요 증가와 함께 중요한 성장 동인으로 인식되고 있다. 다만, 상용화 및 생태계 지지 측면에서는 Google 중심의 제한적 적용과 일부 오픈소스 및 하드웨어 벤더 참여가 있으나, 복수 주요 프레임워크 통합 및 산업 표준화는 아직 초기 단계로 판단된다. 따라서 시장은 이 기술을 유망하지만 아직 완전한 주류 기술로 자리잡기 전 단계로 평가한다.",
+   "information_gaps": [
+    "TurboQuant의 타 벤더 및 오픈소스 프레임워크 통합 현황에 대한 구체적 정보 부족",
+    "다양한 하드웨어 환경 및 대규모 모델에서의 실증적 상용화 사례 및 성능 검증 데이터 부족",
+    "산업 표준화 진행 상황 및 관련 표준화 기구의 채택 여부에 대한 정보 부족"
+   ]
+  },
+  "hw": {
+   "assessments": [
+    {
+     "criterion_id": "M1",
+     "criterion": "시장 규모·성장성",
+     "rating": "높음",
+     "rationale": "CXL 메모리 확장 시장은 2025년 약 10억 달러에서 2034년 약 130억 달러 규모로 연평균 30% 이상 성장할 것으로 여러 시장 보고서에서 명확히 제시되고 있다. 또한, 대규모 LLM 추론에서 KV 캐시 메모리 용량 문제는 증가하는 추세이며, ITME가 이 문제를 해결하는 기술로서 시장 수요가 뚜렷하다. 다만, 일부 근거는 인접 시장 수치에 기반한 간접 근거도 포함되어 있다.",
+     "supporting_evidence": [
+      "[P-HW p.1-2]",
+      "[WM1]",
+      "[WM2]",
+      "[WM3]",
+      "[WM7]",
+      "[WM8]",
+      "[WM9]"
+     ],
+     "counter_evidence": [
+      "특정 하드웨어 및 모델 환경에 한정된 실험 결과로 일반화에 한계가 있음 [P-HW p.1]"
+     ],
+     "confidence": "높음"
+    },
+    {
+     "criterion_id": "M2",
+     "criterion": "상용화·채택 현황",
+     "rating": "중간",
+     "rationale": "ITME는 FPGA 기반 프로토타입과 SK hynix CMM, PCIe Gen5, NVIDIA A100 GPU 환경에서 저자 자체 실험을 통해 성능 향상을 입증했다. 또한, CXL 기반 KV 캐시 서버가 상용화되고 있으며, 관련 논문과 산업계 발표에서 PoC 및 실험적 통합 사례가 확인된다. 그러나 ITME 자체는 아직 완전한 상용 제품으로 널리 운영 중이라는 명확한 근거는 부족하다.",
+     "supporting_evidence": [
+      "[P-HW p.1]",
+      "[WM7]",
+      "[WM3]",
+      "[WM13]",
+      "[WM17]",
+      "[WM8]"
+     ],
+     "counter_evidence": [
+      "FPGA 프로토타입의 하드웨어 오버헤드로 인한 성능 저하 가능성 존재 [P-HW limitations]",
+      "특정 하드웨어 및 모델에 한정된 실험 [P-HW limitations]"
+     ],
+     "confidence": "중간"
+    },
+    {
+     "criterion_id": "M3",
+     "criterion": "생태계 지지",
+     "rating": "중간",
+     "rationale": "ITME는 vLLM과 같은 주요 LLM 추론 프레임워크와 통합되어 실험되었으며, 사용자 수준 프리페처 API를 제공한다. 또한, CXL 메모리 확장 관련 산업 표준과 여러 벤더의 제품이 존재한다. 다만, ITME가 복수 주요 프레임워크에 광범위하게 지원되거나 산업 표준 기반으로 완전하게 자리잡았다는 명확한 근거는 부족하다.",
+     "supporting_evidence": [
+      "[P-HW p.9]",
+      "[P-HW p.2]",
+      "[WM20]",
+      "[WM21]",
+      "[WM22]",
+      "[WM27]",
+      "[WM28]",
+      "[WM29]"
+     ],
+     "counter_evidence": [
+      "ITME는 독자 구현이며, 완전한 산업 표준화나 광범위한 프레임워크 지원 근거는 미흡함"
+     ],
+     "confidence": "중간"
+    }
+   ],
+   "overall_view": "ITME 기술은 대규모 LLM 추론에서 KV 캐시 메모리 용량 문제를 해결하는 혁신적 접근으로, CXL 기반 메모리 확장 시장의 성장과 맞물려 시장에서 긍정적으로 인식되고 있다. 상용화 단계는 아직 초기이나, 관련 PoC와 프로토타입, 일부 상용 제품 사례가 존재하며, 주요 LLM 추론 프레임워크와의 통합 시도도 진행 중이다. 다만, 특정 하드웨어 환경에 의존하는 점과 완전한 산업 표준화 및 광범위한 생태계 지원은 아직 미흡하여 추가 정보와 검증이 필요하다.",
+   "information_gaps": [
+    "ITME의 다양한 하드웨어 및 소프트웨어 환경에서의 일반화된 성능 검증 데이터 부족",
+    "완전한 상용 제품으로서의 운영 사례 및 시장 채택 현황 구체적 정보 부족",
+    "복수 주요 LLM 프레임워크 및 산업 표준과의 공식적 통합 및 지원 현황 미확인"
+   ]
+  }
+ },
+ "domain_eval": {
+  "sw": {
+   "assessments": [
+    {
+     "criterion_id": "D1",
+     "criterion": "비용 효율 (TCO)",
+     "rating": "높음",
+     "rationale": "TurboQuant은 KV 캐시 메모리를 4배에서 6배까지 압축하여 GPU 메모리 사용량을 크게 줄임으로써 동일한 하드웨어에서 더 많은 동시 사용자 또는 더 긴 문맥을 처리할 수 있게 한다. 논문에서 Llama-3.1-8B-Instruct 모델 기준 4배 압축 시 원본과 동일한 성능을 보였고, 웹 근거에서는 6배 압축과 8배 빠른 추론 속도를 보고하여 비용 절감 효과가 명확하다. 추가 하드웨어 없이 소프트웨어적 양자화 기법으로 구현되어 TCO 절감에 직접 기여한다.",
+     "supporting_evidence": [
+      "[P-SW p.17] TurboQuant은 4배 압축(메모리 25% 사용) 시에도 원본 모델과 동일한 성능 달성",
+      "[WD1] TurboQuant 적용 후 KV 캐시 크기가 약 1GB로 줄어 동시 사용자 수 또는 문맥 길이 확장 가능",
+      "[WD2] 3비트 양자화로 6배 메모리 절감 및 8배 빠른 추론 보고",
+      "[WD15] 6배 KV 캐시 메모리 절감 및 최대 8배 빠른 연산"
+     ],
+     "counter_evidence": [
+      "실험은 주로 단일 NVIDIA A100 GPU 환경에서 수행되어 다양한 하드웨어 환경에서의 비용 절감 효과는 추가 검증 필요"
+     ],
+     "confidence": "중간"
+    },
+    {
+     "criterion_id": "D2",
+     "criterion": "처리량·지연",
+     "rating": "높음",
+     "rationale": "TurboQuant은 4배 압축 시에도 원본 모델과 동일한 성능을 유지하며, 메모리 사용량 감소로 인해 VRAM에서 컴퓨트 유닛으로의 데이터 전송량이 줄어들어 처리량 향상과 지연 감소가 가능하다. 웹 근거에서는 H100 GPU에서 최대 8배 빠른 어텐션 연산과 13배 빠른 처리량 증가가 보고되어 대규모 동시 요청 환경에서 처리량과 지연 개선에 긍정적 영향을 미침을 시사한다.",
+     "supporting_evidence": [
+      "[P-SW p.17] TurboQuant은 4배 압축 시에도 원본과 동일한 성능 유지, 긴 문맥 처리에 강점",
+      "[WD13] 6배 메모리 절감과 최대 8배 빠른 어텐션, 13배 빠른 처리량 보고",
+      "[WD14] LongBench 벤치마크에서 TurboQuant이 기존 KIVI 대비 우수한 성능",
+      "[WD15] 8배 빠른 어텐션 연산 보고"
+     ],
+     "counter_evidence": [
+      "실험 대부분이 단일 GPU 환경에서 수행되어 대규모 GPU 클러스터 환경에서의 지연 및 SLO 영향에 대한 직접적 근거는 부족"
+     ],
+     "confidence": "중간"
+    },
+    {
+     "criterion_id": "D3",
+     "criterion": "품질 유지",
+     "rating": "높음",
+     "rationale": "TurboQuant은 3~4비트 양자화에서도 원본 16비트 모델과 동일하거나 무시할 수 있는 수준의 품질 손실만을 보이며, 논문과 웹 벤치마크에서 여러 모델과 데이터셋에 대해 품질 손실이 거의 없음을 보고하였다. 특히 Llama-3.1-8B-Instruct 모델에서 4배 압축 시에도 리콜 점수 등 성능 지표가 원본과 동일하게 나타났다.",
+     "supporting_evidence": [
+      "[P-SW p.16-17] TurboQuant은 내적 왜곡 최소화로 4배 압축 시에도 원본과 동일한 성능 달성",
+      "[WD19] 3.5비트 TurboQuant 구현이 Gemma, Mistral 모델에서 16비트와 동일한 성능 확인",
+      "[WD20] 5배 압축에도 근접 무손실 품질 보고",
+      "[WD21] 1/6 크기 KV 캐시로 품질 손실 없이 성능 유지"
+     ],
+     "counter_evidence": [
+      "실험은 단일 GPU 및 제한된 벤치마크에 국한되어 있어 다양한 모델과 실제 대규모 서빙 환경에서의 품질 유지 검증은 추가 필요"
+     ],
+     "confidence": "중간"
+    },
+    {
+     "criterion_id": "D4",
+     "criterion": "도입 용이성",
+     "rating": "중간",
+     "rationale": "TurboQuant은 데이터 의존적 튜닝 없이 즉시 적용 가능한 온라인 양자화 기법으로, 기존 GPU 클러스터에서 소프트웨어 변경만으로 도입 가능하다. 다만, 내적 왜곡 최소화를 위한 양자화 알고리즘 구현과 일부 커널 최적화가 필요하며, 고성능 GPU 환경(NVIDIA A100, H100 등)을 요구한다. 따라서 완전한 무변경 도입은 아니지만 신규 하드웨어 없이도 도입 가능하여 중간 등급으로 평가된다.",
+     "supporting_evidence": [
+      "[P-SW p.4] 데이터 의존적 튜닝 불필요, 온라인 즉시 적용 가능",
+      "[WD19] 재학습 없이 3.5비트 압축 구현 가능",
+      "[WD22] 기존 인프라에서 소프트웨어 설정 변경으로 도입 가능",
+      "[WD23] vLLM 클라우드 서빙에 통합되어 실제 서비스 적용 사례 존재"
+     ],
+     "counter_evidence": [
+      "내적 왜곡 최소화를 위한 양자화 알고리즘 구현과 일부 커널 최적화가 필요하며, 고성능 GPU 환경이 요구되어 도입 난이도가 완전히 낮지는 않음"
+     ],
+     "confidence": "중간"
+    }
+   ],
+   "overall_view": "TurboQuant은 데이터센터 및 클라우드 LLM 서빙 환경에서 KV 캐시 메모리 병목 문제를 효과적으로 완화하는 온라인 벡터 양자화 기술로 평가된다. 비용 효율 측면에서 GPU 메모리 사용량을 크게 줄여 TCO 절감에 기여하며, 처리량과 지연 측면에서도 메모리 압축에 따른 데이터 전송량 감소로 성능 향상을 기대할 수 있다. 품질 유지 측면에서는 여러 벤치마크에서 원본과 동등한 성능을 보이며, 도입 용이성은 기존 인프라에 소프트웨어 변경만으로 가능하나 고성능 GPU 요구와 알고리즘 구현 난이도가 일부 존재한다. 다만, 대부분의 근거가 단일 GPU 환경과 저자 보고에 기반하므로, 대규모 클러스터 환경에서의 추가 검증이 필요하다.",
+   "information_gaps": [
+    "대규모 GPU 클러스터 환경에서 TurboQuant 적용 시 처리량, 지연, SLO 영향에 대한 실증적 데이터 부족",
+    "다양한 LLM 모델과 실제 서비스 워크로드에서의 품질 유지 및 안정성 검증 부족",
+    "다양한 GPU 아키텍처 및 하드웨어 환경에서의 호환성 및 성능 평가 미흡",
+    "운영 환경에서의 구현 복잡도 및 유지보수 비용에 대한 구체적 정보 부족"
+   ]
+  },
+  "hw": {
+   "assessments": [
+    {
+     "criterion_id": "D1",
+     "criterion": "비용 효율 (TCO)",
+     "rating": "중간",
+     "rationale": "ITME는 CXL-하이브리드 메모리를 활용해 GPU 메모리 한계를 넘어 대규모 KV 캐시를 수용함으로써 최대 35.7%의 추론 처리량 향상을 저자 자체 실험에서 보고하였다. 이는 GPU당 수용량 확대와 간접적으로 비용 절감 효과를 시사한다. 다만, CXL 하드웨어와 FPGA 프로토타입, 100Gbps 이상 네트워크 인프라 등 추가 하드웨어 및 인프라 투자가 필요하며, 저자 실험 외 제3자 검증은 부족하다. 웹 근거들은 CXL 메모리 풀링이 TCO 절감에 기여한다고 하나 ITME 특정 기술에 대한 직접적 비용 절감 수치는 부족하다.",
+     "supporting_evidence": [
+      "[P-HW p.1]",
+      "[P-HW p.11]",
+      "[WD4]",
+      "[WD5]",
+      "[WD6]"
+     ],
+     "counter_evidence": [
+      "추가 하드웨어(예: CXL-하이브리드 메모리, FPGA 프로토타입)와 고속 네트워크 인프라(100Gbps 이상)가 필요해 초기 투자 비용이 증가할 수 있다.",
+      "저자 실험은 특정 하드웨어 구성에 한정되어 있어 일반화 및 비용 절감 효과의 보편성 판단이 어렵다."
+     ],
+     "confidence": "중간"
+    },
+    {
+     "criterion_id": "D2",
+     "criterion": "처리량·지연",
+     "rating": "높음",
+     "rationale": "저자 자체 실험에서 ITME는 SK hynix CMM과 PCIe Gen5 NVMe SSD를 활용해 최대 35.7% 추론 처리량 향상을 달성했으며, FPGA 프로토타입을 통한 하드웨어 수준 프리페처로 저장소 접근 지연을 효과적으로 마스킹하였다. 또한, Llama-3.1 8B 및 70B 모델에서 CPU 오프로딩 대비 유사하거나 우수한 성능을 보였다. 웹 근거들도 CXL 기반 KV 캐시가 GPU 메모리 병목을 완화하며 처리량 증가와 지연 유지에 기여함을 시사한다.",
+     "supporting_evidence": [
+      "[P-HW p.1]",
+      "[P-HW p.11]",
+      "[P-HW p.10]",
+      "[WD7]",
+      "[WD8]",
+      "[WD9]"
+     ],
+     "counter_evidence": [
+      "FPGA 프로토타입은 CMM 기반 평가 대비 하드웨어 오버헤드로 성능이 다소 낮아 실제 구현 시 성능 저하 가능성이 있다.",
+      "실험이 특정 하드웨어 및 모델에 한정되어 다른 환경에서의 처리량·지연 개선 일반화는 판단 유보."
+     ],
+     "confidence": "중간"
+    },
+    {
+     "criterion_id": "D3",
+     "criterion": "품질 유지",
+     "rating": "높음",
+     "rationale": "저자 실험에서 ITME는 8B 및 70B Llama-3.1 모델과 ShareGPT 데이터셋을 활용한 다중 대화 평가에서 CPU 오프로딩 대비 유사하거나 우수한 품질을 보였으며, 모델 정확도 및 출력 품질 손실이 1~5% 이내로 미미함을 보고하였다. 이는 ITME가 저장소 및 네트워크 지연을 효과적으로 숨기면서 품질 저하 없이 대규모 KV 캐시를 확장할 수 있음을 시사한다. 웹 근거에서도 CXL 기반 KV 캐시 관리가 품질 손실 없이 효율적임을 간접적으로 뒷받침한다.",
+     "supporting_evidence": [
+      "[P-HW p.10]",
+      "[WD10]",
+      "[WD11]",
+      "[WD12]"
+     ],
+     "counter_evidence": [
+      "활성화 및 작업 중인 KV 캐시 등 지연에 민감한 데이터는 GPU 또는 호스트 메모리에 유지해야 하며, ITME는 예측 가능하고 대용량인 데이터에 적합해 일부 품질 위험이 존재할 수 있다."
+     ],
+     "confidence": "중간"
+    },
+    {
+     "criterion_id": "D4",
+     "criterion": "도입 용이성",
+     "rating": "낮음",
+     "rationale": "ITME 도입을 위해서는 CXL-하이브리드 메모리 장치, PCIe Gen5 인터페이스, FPGA 기반 하드웨어 프로토타입 또는 유사한 하드웨어 수준 프리페처 구현, 100Gbps 이상 네트워크 인프라 등 신규 하드웨어 및 인프라가 필요하다. 또한, LLM 추론 프레임워크에서 사용자 수준 프리페처 API 활용이 요구되어 기존 GPU 클러스터 및 서빙 스택에 대한 변경과 추가 복잡도가 예상된다. 따라서 기존 인프라에 SW 변경만으로 도입이 어려워 도입 난이도가 높다.",
+     "supporting_evidence": [
+      "[P-HW p.2]",
+      "[P-HW p.9]",
+      "[P-HW p.11]",
+      "[WD16]",
+      "[WD17]",
+      "[WD18]"
+     ],
+     "counter_evidence": [
+      "확인된 반대 근거 없음"
+     ],
+     "confidence": "중간"
+    }
+   ],
+   "overall_view": "ITME는 CXL-하이브리드 메모리를 활용해 대규모 LLM 추론에서 KV 캐시 메모리 용량 문제를 효과적으로 해결하며, 저자 자체 실험에서 최대 35.7% 처리량 향상과 품질 유지가 확인되었다. 다만, 도입을 위해서는 CXL 메모리, FPGA 프로토타입, 고속 네트워크 등 신규 하드웨어와 인프라 투자가 필요하며, 특정 하드웨어 및 모델에 한정된 평가로 일반화에는 한계가 있다. 비용 효율 측면에서는 추가 투자 필요성으로 인해 절감 효과가 있으나 초기 비용 부담이 존재한다. 처리량과 지연 개선은 명확히 보고되었으며, 품질 손실은 미미한 수준으로 평가된다. 도입 용이성은 낮아 기존 GPU 클러스터 환경에 바로 적용하기에는 제약이 크다.",
+   "information_gaps": [
+    "다양한 하드웨어 환경과 LLM 모델에서의 ITME 성능 및 비용 효율성에 대한 제3자 검증 결과 부족",
+    "실제 대규모 클라우드·데이터센터 환경에서의 장기 운영 및 확장성 평가 미흡",
+    "도입 시 운영 복잡도 및 유지보수 비용에 대한 구체적 분석 부재"
+   ]
+  }
+ },
+ "synthesis": {
+  "agreements": [
+   "두 기술 모두 LLM 추론에서 KV 캐시 메모리 병목 문제를 해결하는 혁신적 접근으로 시장에서 높은 성장 가능성을 보인다.",
+   "상용화 및 채택 현황은 아직 초기 단계이나, Google 중심의 TurboQuant과 PoC 및 프로토타입 단계의 ITME가 각각 일부 적용 사례를 보이고 있다.",
+   "생태계 지지 측면에서 주요 LLM 추론 프레임워크와 일부 하드웨어 벤더 참여가 있으나, 복수 주요 프레임워크 통합 및 산업 표준화는 미흡하다.",
+   "도메인 적용 관점에서 두 기술 모두 처리량과 품질 유지 측면에서 긍정적 평가를 받으며, 성능 향상과 품질 손실 최소화가 확인되었다."
+  ],
+  "conflicts": [
+   {
+    "topic": "비용 효율 (TCO)",
+    "tech": "SW (TurboQuant)",
+    "market_view": "TurboQuant은 소프트웨어적 양자화 기법으로 GPU 메모리 사용량을 크게 줄여 추가 하드웨어 투자 없이 비용 절감 효과가 크다고 평가된다.",
+    "domain_view": "실험은 단일 NVIDIA A100 GPU 환경에 국한되었으나, 추가 하드웨어 없이 도입 가능해 TCO 절감에 직접 기여한다는 점에서 비용 효율이 높게 평가된다.",
+    "why_diverge": "시장에서는 소프트웨어 중심의 비용 절감 효과를 중시하는 반면, 도메인에서는 실험 환경 제한과 실제 대규모 환경 검증 부족을 지적하며 비용 절감 효과의 보편성에 신중하다."
+   },
+   {
+    "topic": "비용 효율 (TCO)",
+    "tech": "HW (ITME)",
+    "market_view": "ITME는 CXL-하이브리드 메모리와 FPGA 프로토타입 등 추가 하드웨어 및 인프라 투자가 필요해 초기 비용 부담이 크지만, 장기적으로는 시장 성장과 함께 비용 절감 가능성이 있다고 본다.",
+    "domain_view": "도메인 관점에서는 추가 하드웨어와 고속 네트워크 인프라 요구로 초기 투자 비용이 높고, 저자 실험 외 제3자 검증이 부족해 비용 효율성에 한계가 있다고 평가한다.",
+    "why_diverge": "시장은 CXL 메모리 확장 시장 성장과 잠재적 비용 절감에 주목하나, 도메인에서는 도입 복잡성과 초기 투자 부담, 검증 부족을 문제로 본다."
+   },
+   {
+    "topic": "도입 용이성",
+    "tech": "SW (TurboQuant)",
+    "market_view": "TurboQuant은 데이터 의존적 튜닝 불필요하고 소프트웨어 변경만으로 도입 가능해 도입 용이성이 중간 수준으로 평가된다.",
+    "domain_view": "도메인에서는 고성능 GPU 요구와 양자화 알고리즘 구현 난이도 등으로 완전한 무변경 도입은 아니며, 도입 난이도가 중간으로 평가된다.",
+    "why_diverge": "시장에서는 소프트웨어 중심 도입 용이성을 강조하지만, 도메인에서는 구현 난이도와 하드웨어 요구 조건을 고려해 도입 난이도를 신중히 본다."
+   },
+   {
+    "topic": "도입 용이성",
+    "tech": "HW (ITME)",
+    "market_view": "ITME는 신규 하드웨어와 인프라, 프레임워크 API 활용이 필요해 도입 난이도가 높다고 평가된다.",
+    "domain_view": "도메인 관점에서도 CXL-하이브리드 메모리, FPGA 프로토타입, 고속 네트워크 등 신규 인프라 요구로 도입 용이성이 낮다고 평가한다.",
+    "why_diverge": "양측 모두 도입 난이도가 높다는 점에서 일치한다."
+   }
+  ],
+  "tech_contrast": [
+   "TurboQuant은 소프트웨어 중심의 온라인 벡터 양자화 기술로, 기존 GPU 인프라에서 소프트웨어 변경만으로 메모리 압축과 성능 향상을 도모한다.",
+   "ITME는 하드웨어 중심의 CXL-하이브리드 메모리 기반 계층형 메모리 확장 아키텍처로, 대규모 KV 캐시를 외부 메모리로 확장하여 처리량 향상과 메모리 한계 극복을 목표로 한다."
+  ],
+  "complementarity": "TurboQuant의 소프트웨어적 데이터 축소 기술과 ITME의 하드웨어적 공간 확장 기술은 상호 보완 가능하다. TurboQuant으로 KV 캐시 메모리 압박을 줄이면서, ITME를 통해 대규모 KV 캐시를 외부 메모리로 확장하면, 메모리 병목 문제를 다각도로 완화할 수 있다. 다만, 두 기술의 병행 적용은 각 기술의 하드웨어 및 소프트웨어 요구사항과 도입 난이도를 고려하여 신중히 설계되어야 한다.",
+  "caveats": [
+   "두 기술 모두 실험이 특정 하드웨어 환경(예: NVIDIA A100 GPU, SK hynix CMM, PCIe Gen5)과 제한된 모델 규모(Llama-3.1 8B 등)에 국한되어 있어, 대규모 클라우드 및 데이터센터 환경에서의 일반화와 장기 운영 검증이 필요하다.",
+   "TurboQuant은 과도한 압축 시 모델 신뢰성 저하 위험이 존재하며, ITME는 활성화 및 작업 중인 KV 캐시와 같이 지연에 민감한 데이터 처리에 한계가 있다.",
+   "상용화 및 생태계 지지 측면에서 두 기술 모두 Google 중심 또는 PoC 단계에 머무르고 있어, 타 벤더 및 오픈소스 커뮤니티 통합, 산업 표준화 진행 상황에 대한 추가 정보가 요구된다.",
+   "도입 용이성에서 TurboQuant은 소프트웨어 변경만으로 가능하나 고성능 GPU 요구와 알고리즘 구현 난이도가 존재하며, ITME는 신규 하드웨어 및 인프라 투자와 프레임워크 변경이 필요해 도입 난이도가 높다."
+  ]
+ },
+ "review": {
+  "passed": false,
+  "issues": [
+   "우열 판정 표현 '우수' 사용 - 중립적 표현으로 수정"
+  ],
+  "pages": 5
+ },
+ "revision_count": 2,
+ "trace": [
+  {
+   "agent": "tech_research",
+   "tech": "sw",
+   "question": "What problem does the method address regarding KV cache memory in LLM inference?",
+   "attempts": [
+    {
+     "query": "What problem does the method address regarding KV cache memory in LLM inference?",
+     "retrieved": [
+      93,
+      103,
+      92,
+      95,
+      18
+     ],
+     "relevant": [
+      103,
+      92,
+      18
+     ]
+    }
+   ]
+  },
+  {
+   "agent": "tech_research",
+   "tech": "sw",
+   "question": "What is the core mechanism or architecture of the method and how does it reduce KV cache memory pressure?",
+   "attempts": [
+    {
+     "query": "What is the core mechanism or architecture of the method and how does it reduce KV cache memory pressure?",
+     "retrieved": [
+      17,
+      69,
+      93,
+      92,
+      6
+     ],
+     "relevant": [
+      17,
+      6
+     ]
+    }
+   ]
+  },
+  {
+   "agent": "tech_research",
+   "tech": "sw",
+   "question": "What are the main reported results such as compression ratio, memory capacity, speedup, throughput or accuracy?",
+   "attempts": [
+    {
+     "query": "What are the main reported results such as compression ratio, memory capacity, speedup, throughput or accuracy?",
+     "retrieved": [
+      20,
+      69,
+      95,
+      82,
+      70
+     ],
+     "relevant": [
+      69,
+      70
+     ]
+    }
+   ]
+  },
+  {
+   "agent": "tech_research",
+   "tech": "sw",
+   "question": "What experimental setup (models, benchmarks, hardware, context lengths) was used to evaluate the proposed method?",
+   "attempts": [
+    {
+     "query": "What experimental setup (models, benchmarks, hardware, context lengths) was used to evaluate the proposed method?",
+     "retrieved": [
+      60,
+      77,
+      20,
+      68,
+      79
+     ],
+     "relevant": [
+      60,
+      77,
+      68
+     ]
+    }
+   ]
+  },
+  {
+   "agent": "tech_research",
+   "tech": "sw",
+   "question": "What are the limitations, assumptions, overheads or unsupported settings of the method?",
+   "attempts": [
+    {
+     "query": "What are the limitations, assumptions, overheads or unsupported settings of the method?",
+     "retrieved": [
+      20,
+      19,
+      87,
+      82,
+      79
+     ],
+     "relevant": [
+      20,
+      19,
+      82
+     ]
+    }
+   ]
+  },
+  {
+   "agent": "tech_research",
+   "tech": "hw",
+   "question": "What problem does the method address regarding KV cache memory in LLM inference?",
+   "attempts": [
+    {
+     "query": "What problem does the method address regarding KV cache memory in LLM inference?",
+     "retrieved": [
+      196,
+      202,
+      113,
+      108,
+      204
+     ],
+     "relevant": [
+      196,
+      113,
+      108
+     ]
+    }
+   ]
+  },
+  {
+   "agent": "tech_research",
+   "tech": "hw",
+   "question": "What is the core mechanism or architecture of the method and how does it reduce KV cache memory pressure?",
+   "attempts": [
+    {
+     "query": "What is the core mechanism or architecture of the method and how does it reduce KV cache memory pressure?",
+     "retrieved": [
+      108,
+      201,
+      189,
+      116,
+      117
+     ],
+     "relevant": [
+      108,
+      116,
+      117
+     ]
+    }
+   ]
+  },
+  {
+   "agent": "tech_research",
+   "tech": "hw",
+   "question": "What are the main reported results such as compression ratio, memory capacity, speedup, throughput or accuracy?",
+   "attempts": [
+    {
+     "query": "What are the main reported results such as compression ratio, memory capacity, speedup, throughput or accuracy?",
+     "retrieved": [
+      109,
+      201,
+      181,
+      202,
+      179
+     ],
+     "relevant": [
+      201,
+      181,
+      179
+     ]
+    }
+   ]
+  },
+  {
+   "agent": "tech_research",
+   "tech": "hw",
+   "question": "What experimental setup (models, benchmarks, hardware, context lengths) was used to evaluate the proposed method?",
+   "attempts": [
+    {
+     "query": "What experimental setup (models, benchmarks, hardware, context lengths) was used to evaluate the proposed method?",
+     "retrieved": [
+      177,
+      214,
+      201,
+      173,
+      202
+     ],
+     "relevant": [
+      177,
+      173
+     ]
+    }
+   ]
+  },
+  {
+   "agent": "tech_research",
+   "tech": "hw",
+   "question": "What are the limitations, assumptions, overheads or unsupported settings of the method?",
+   "attempts": [
+    {
+     "query": "What are the limitations, assumptions, overheads or unsupported settings of the method?",
+     "retrieved": [
+      214,
+      115,
+      202,
+      193,
+      201
+     ],
+     "relevant": [
+      115,
+      193,
+      201
+     ]
+    }
+   ]
+  },
+  {
+   "agent": "domain",
+   "tech": "sw",
+   "criterion": "D1",
+   "question": "How much KV cache memory reduction or memory capacity expansion does the method achieve, and at what hardware cost?",
+   "attempts": [
+    {
+     "query": "How much KV cache memory reduction or memory capacity expansion does the method achieve, and at what hardware cost?",
+     "retrieved": [
+      69,
+      17,
+      103,
+      20,
+      48
+     ],
+     "relevant": [
+      69,
+      17
+     ]
+    }
+   ]
+  },
+  {
+   "agent": "domain",
+   "tech": "hw",
+   "criterion": "D1",
+   "question": "How much KV cache memory reduction or memory capacity expansion does the method achieve, and at what hardware cost?",
+   "attempts": [
+    {
+     "query": "How much KV cache memory reduction or memory capacity expansion does the method achieve, and at what hardware cost?",
+     "retrieved": [
+      199,
+      135,
+      201,
+      195,
+      108
+     ],
+     "relevant": [
+      201,
+      108
+     ]
+    }
+   ]
+  },
+  {
+   "agent": "domain",
+   "tech": "sw",
+   "criterion": "D2",
+   "question": "What throughput or latency improvements are reported, and under what setup (models, batch size, context length, hardware)?",
+   "attempts": [
+    {
+     "query": "What throughput or latency improvements are reported, and under what setup (models, batch size, context length, hardware)?",
+     "retrieved": [
+      95,
+      70,
+      5,
+      79,
+      6
+     ],
+     "relevant": [
+      70,
+      5,
+      6
+     ]
+    }
+   ]
+  },
+  {
+   "agent": "domain",
+   "tech": "hw",
+   "criterion": "D2",
+   "question": "What throughput or latency improvements are reported, and under what setup (models, batch size, context length, hardware)?",
+   "attempts": [
+    {
+     "query": "What throughput or latency improvements are reported, and under what setup (models, batch size, context length, hardware)?",
+     "retrieved": [
+      108,
+      201,
+      189,
+      146,
+      194
+     ],
+     "relevant": [
+      108,
+      201,
+      189
+     ]
+    }
+   ]
+  },
+  {
+   "agent": "domain",
+   "tech": "hw",
+   "criterion": "D3",
+   "question": "Does the method affect model accuracy or output quality? Which benchmarks and accuracy results are reported?",
+   "attempts": [
+    {
+     "query": "Does the method affect model accuracy or output quality? Which benchmarks and accuracy results are reported?",
+     "retrieved": [
+      201,
+      115,
+      214,
+      190,
+      202
+     ],
+     "relevant": [
+      190
+     ]
+    }
+   ]
+  },
+  {
+   "agent": "domain",
+   "tech": "hw",
+   "criterion": "D4",
+   "question": "What hardware, software changes or system integration are required to deploy the method, and what overheads does it add?",
+   "attempts": [
+    {
+     "query": "What hardware, software changes or system integration are required to deploy the method, and what overheads does it add?",
+     "retrieved": [
+      176,
+      202,
+      201,
+      214,
+      115
+     ],
+     "relevant": [
+      176,
+      201,
+      115
+     ]
+    }
+   ]
+  },
+  {
+   "agent": "domain",
+   "tech": "sw",
+   "criterion": "D3",
+   "question": "Does the method affect model accuracy or output quality? Which benchmarks and accuracy results are reported?",
+   "attempts": [
+    {
+     "query": "Does the method affect model accuracy or output quality? Which benchmarks and accuracy results are reported?",
+     "retrieved": [
+      65,
+      60,
+      20,
+      6,
+      70
+     ],
+     "relevant": [
+      65,
+      60,
+      6,
+      70
+     ]
+    }
+   ]
+  },
+  {
+   "agent": "domain",
+   "tech": "sw",
+   "criterion": "D4",
+   "question": "What hardware, software changes or system integration are required to deploy the method, and what overheads does it add?",
+   "attempts": [
+    {
+     "query": "What hardware, software changes or system integration are required to deploy the method, and what overheads does it add?",
+     "retrieved": [
+      95,
+      87,
+      82,
+      79,
+      18
+     ],
+     "relevant": [
+      82
+     ]
+    }
+   ]
+  },
+  {
+   "agent": "market",
+   "tech": "sw",
+   "criterion": "M1",
+   "question": "What trends in context length, model size or memory demand motivate this work?",
+   "attempts": [
+    {
+     "query": "What trends in context length, model size or memory demand motivate this work?",
+     "retrieved": [
+      87,
+      6,
+      70,
+      5,
+      20
+     ],
+     "relevant": [
+      6,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "agent": "market",
+   "tech": "hw",
+   "criterion": "M1",
+   "question": "What trends in context length, model size or memory demand motivate this work?",
+   "attempts": [
+    {
+     "query": "What trends in context length, model size or memory demand motivate this work?",
+     "retrieved": [
+      109,
+      202,
+      189,
+      214,
+      115
+     ],
+     "relevant": [
+      109,
+      115
+     ]
+    }
+   ]
+  },
+  {
+   "agent": "market",
+   "tech": "hw",
+   "criterion": "M2",
+   "question": "How is the method implemented and evaluated, and does it integrate with existing inference or serving systems?",
+   "attempts": [
+    {
+     "query": "How is the method implemented and evaluated, and does it integrate with existing inference or serving systems?",
+     "retrieved": [
+      214,
+      110,
+      202,
+      210,
+      109
+     ],
+     "relevant": [
+      110,
+      109
+     ]
+    }
+   ]
+  },
+  {
+   "agent": "market",
+   "tech": "sw",
+   "criterion": "M2",
+   "question": "How is the method implemented and evaluated, and does it integrate with existing inference or serving systems?",
+   "attempts": [
+    {
+     "query": "How is the method implemented and evaluated, and does it integrate with existing inference or serving systems?",
+     "retrieved": [
+      87,
+      5,
+      60,
+      18,
+      20
+     ],
+     "relevant": [
+      5,
+      60
+     ]
+    }
+   ]
+  },
+  {
+   "agent": "market",
+   "tech": "hw",
+   "criterion": "M3",
+   "question": "Which frameworks, hardware platforms, interconnects or standards does the method build on or require?",
+   "attempts": [
+    {
+     "query": "Which frameworks, hardware platforms, interconnects or standards does the method build on or require?",
+     "retrieved": [
+      176,
+      214,
+      158,
+      201,
+      115
+     ],
+     "relevant": [
+      176,
+      115
+     ]
+    }
+   ]
+  },
+  {
+   "agent": "market",
+   "tech": "sw",
+   "criterion": "M3",
+   "question": "Which frameworks, hardware platforms, interconnects or standards does the method build on or require?",
+   "attempts": [
+    {
+     "query": "Which frameworks, hardware platforms, interconnects or standards does the method build on or require?",
+     "retrieved": [
+      87,
+      18,
+      79,
+      16,
+      20
+     ],
+     "relevant": [
+      18,
+      16
+     ]
+    }
+   ]
+  }
+ ],
+ "sources": [
+  {
+   "id": "P-SW",
+   "kind": "paper",
+   "tech": "sw",
+   "title": "TurboQuant: Online Vector Quantization with Near-optimal Distortion Rate",
+   "url": "https://arxiv.org/abs/2504.19874",
+   "citation": "Zandieh, A., Daliri, M., Hadian, M., & Mirrokni, V.(2025). TurboQuant: Online Vector Quantization with Near-optimal Distortion Rate. *arXiv*, 2504.19874."
+  },
+  {
+   "id": "P-HW",
+   "kind": "paper",
+   "tech": "hw",
+   "title": "ITME: Inference Tiered Memory Expansion with Disaggregated CXL-Hybrid Memories",
+   "url": "https://arxiv.org/abs/2606.12556",
+   "citation": "Jang, H., Min, Y., Kim, S., Ahn, T., Kim, H., Joo, Y., Kim, H., & Kim, J.(2026). ITME: Inference Tiered Memory Expansion with Disaggregated CXL-Hybrid Memories. *arXiv*, 2606.12556."
+  },
+  {
+   "id": "WD1",
+   "kind": "web",
+   "tech": "sw",
+   "title": "TurboQuant Changes the Economics of Local AI Inference",
+   "url": "https://medium.com/@michael.hannecke/googles-turboquant-changes-the-economics-of-local-ai-inference-acce5839014d",
+   "site": "medium.com",
+   "date": ""
+  },
+  {
+   "id": "WD2",
+   "kind": "web",
+   "tech": "sw",
+   "title": "What Is Google TurboQuant? The KV Cache Compression ...",
+   "url": "https://www.mindstudio.ai/blog/what-is-google-turboquant-kv-cache-compression",
+   "site": "mindstudio.ai",
+   "date": ""
+  },
+  {
+   "id": "WD3",
+   "kind": "web",
+   "tech": "sw",
+   "title": "อัลกอริทึมการบีบอัด TurboQuant ของ Google คืออะไร? และจะส่งผลกระทบต่ออุตสาหกรรมชิปจัดเก็บข้อมูลสำหรับ AI อย่างไร?",
+   "url": "https://www.tradingkey.com/th/analysis/stocks/us-stocks/261728273-what-is-google-turboquant-compression-algorithm-how-impact-ai-memory-chip-industry-tradingkey",
+   "site": "tradingkey.com",
+   "date": ""
+  },
+  {
+   "id": "WD4",
+   "kind": "web",
+   "tech": "hw",
+   "title": "CXL Memory For LLM Inference: Breaking The AI ...",
+   "url": "https://acecloud.ai/blog/cxl-memory-llm-inference",
+   "site": "acecloud.ai",
+   "date": ""
+  },
+  {
+   "id": "WD5",
+   "kind": "web",
+   "tech": "hw",
+   "title": "CXL-Enabled KV-Cache Management Beyond GPU Limits",
+   "url": "https://arxiv.org/html/2511.00321v1",
+   "site": "arxiv.org",
+   "date": ""
+  },
+  {
+   "id": "WD6",
+   "kind": "web",
+   "tech": "hw",
+   "title": "Overcoming the AI Memory Wall: How CXL ...",
+   "url": "https://computeexpresslink.org/blog/overcoming-the-ai-memory-wall-how-cxl-memory-pooling-powers-the-next-leap-in-scalable-ai-computing-4267",
+   "site": "computeexpresslink.org",
+   "date": ""
+  },
+  {
+   "id": "WD7",
+   "kind": "web",
+   "tech": "hw",
+   "title": "Exploring CXL-based KV Cache Storage for LLM Serving",
+   "url": "https://neurips.cc/virtual/2024/103619",
+   "site": "neurips.cc",
+   "date": ""
+  },
+  {
+   "id": "WD8",
+   "kind": "web",
+   "tech": "hw",
+   "title": "Exploring CXL-based KV Cache Storage for LLM Serving",
+   "url": "https://mlforsystems.org/assets/papers/neurips2024/paper17.pdf",
+   "site": "mlforsystems.org",
+   "date": ""
+  },
+  {
+   "id": "WD9",
+   "kind": "web",
+   "tech": "hw",
+   "title": "Disaggregated LLM Serving with CXL Shared Memory KV ...",
+   "url": "https://vtechworks.lib.vt.edu/server/api/core/bitstreams/fb5697b4-124d-4dca-be49-dab91e3e0c2a/content",
+   "site": "vtechworks.lib.vt.edu",
+   "date": ""
+  },
+  {
+   "id": "WD10",
+   "kind": "web",
+   "tech": "hw",
+   "title": "OASIS: Outlier-Aware KV Cache Clustering for Scaling ...",
+   "url": "https://www.computer.org/csdl/journal/ca/2025/01/10990150/26wpHF5GHOo",
+   "site": "computer.org",
+   "date": ""
+  },
+  {
+   "id": "WD11",
+   "kind": "web",
+   "tech": "hw",
+   "title": "The KV Cache Is Killing Your LLM at Scale",
+   "url": "https://medium.com/@adityaj5400/the-kv-cache-is-killing-your-llm-at-scale-heres-the-low-level-physics-nobody-talks-about-b577c4c7549e",
+   "site": "medium.com",
+   "date": ""
+  },
+  {
+   "id": "WD12",
+   "kind": "web",
+   "tech": "hw",
+   "title": "#llm #inferenceoptimization #aiengineering",
+   "url": "https://www.linkedin.com/posts/aboniasojasingarayar_llm-inferenceoptimization-aiengineering-activity-7383384750058676224-UWyC",
+   "site": "linkedin.com",
+   "date": ""
+  },
+  {
+   "id": "WD13",
+   "kind": "web",
+   "tech": "sw",
+   "title": "TurboQuant Explained: How KV Cache Compression Cuts LLM Memory by 6x",
+   "url": "https://nandigamharikrishna.substack.com/p/turboquant-explained-how-kv-cache",
+   "site": "nandigamharikrishna.substack.com",
+   "date": ""
+  },
+  {
+   "id": "WD14",
+   "kind": "web",
+   "tech": "sw",
+   "title": "Google TurboQuant Compresses LLM KV Cache 6x | aiHola",
+   "url": "https://aihola.com/article/google-turboquant-kv-cache-compression",
+   "site": "aihola.com",
+   "date": ""
+  },
+  {
+   "id": "WD15",
+   "kind": "web",
+   "tech": "sw",
+   "title": "Google TurboQuant: 6x KV Cache Compression for LLM ...",
+   "url": "https://www.spheron.network/blog/google-turboquant-llm-compression-gpu-cloud",
+   "site": "spheron.network",
+   "date": ""
+  },
+  {
+   "id": "WD16",
+   "kind": "web",
+   "tech": "hw",
+   "title": "How CXL Transforms RAG and KV Cache Performance",
+   "url": "https://www.asteralabs.com/resources/blog/breaking-through-the-memory-wall-how-cxl-transforms-rag-and-kv-cache-performance",
+   "site": "asteralabs.com",
+   "date": ""
+  },
+  {
+   "id": "WD17",
+   "kind": "web",
+   "tech": "hw",
+   "title": "Reimagining LLM Inference Infrastructure with Memory- ...",
+   "url": "https://hotinfra.org/2026/papers/hotinfra26-final59.pdf",
+   "site": "hotinfra.org",
+   "date": ""
+  },
+  {
+   "id": "WD18",
+   "kind": "web",
+   "tech": "hw",
+   "title": "Using CXL Fabric-Attached Memory to Enable Shared KV ...",
+   "url": "https://www.snia.org/sniadeveloper/session/19665",
+   "site": "snia.org",
+   "date": ""
+  },
+  {
+   "id": "WD19",
+   "kind": "web",
+   "tech": "sw",
+   "title": "Google's TurboQuant Compression May Support Faster ...",
+   "url": "https://www.infoq.com/news/2026/04/turboquant-compression-kv-cache",
+   "site": "infoq.com",
+   "date": ""
+  },
+  {
+   "id": "WD20",
+   "kind": "web",
+   "tech": "sw",
+   "title": "TurboQuant Compresses KV Cache by 5X. Does That ...",
+   "url": "https://blog.everpuredata.com/purely-technical/turboquant-compresses-kv-cache-by-5x-does-that-mean-you-need-less-memory",
+   "site": "blog.everpuredata.com",
+   "date": ""
+  },
+  {
+   "id": "WD21",
+   "kind": "web",
+   "tech": "sw",
+   "title": "หุ้น Micron ปรับตัวร่วงลง การโจมตีอย่างแม่นยำโดย Google TurboQuant? อาณาจักรหน่วยความจำ AI ของ Micron กำลังเผชิญกับบททดสอบ",
+   "url": "https://tradingkey.com/th/analysis/stocks/us-stocks/261723403-micron-stock-price-declining-google-turboquant-striking-tradingkey",
+   "site": "tradingkey.com",
+   "date": ""
+  },
+  {
+   "id": "WD22",
+   "kind": "web",
+   "tech": "sw",
+   "title": "TurboQuant: How Google Solved the KV Cache Memory Wall at 3 Bits Per Element | by Jin Tan Ruan, CSE Computer Science - ML Engineer | Medium",
+   "url": "https://jtanruan.medium.com/turboquant-how-google-solved-the-kv-cache-memory-wall-at-3-bits-per-element-03742b35135a",
+   "site": "jtanruan.medium.com",
+   "date": ""
+  },
+  {
+   "id": "WD23",
+   "kind": "web",
+   "tech": "sw",
+   "title": "Google TurboQuant in August 2026: Where It Actually Runs",
+   "url": "https://o-mega.ai/articles/google-turboquant-the-2026-llm-compression-guide",
+   "site": "o-mega.ai",
+   "date": ""
+  },
+  {
+   "id": "WM1",
+   "kind": "web",
+   "tech": "hw",
+   "title": "CXL Memory Expansion Market Size, Share and Forecast ...",
+   "url": "https://www.fortunebusinessinsights.com/cxl-memory-expansion-market-119032",
+   "site": "fortunebusinessinsights.com",
+   "date": ""
+  },
+  {
+   "id": "WM2",
+   "kind": "web",
+   "tech": "hw",
+   "title": "CXL Memory Expansion Market Growth, Forecast Report ...",
+   "url": "https://www.sphericalinsights.com/reports/cxl-memory-expansion-market",
+   "site": "sphericalinsights.com",
+   "date": ""
+  },
+  {
+   "id": "WM3",
+   "kind": "web",
+   "tech": "hw",
+   "title": "How CXL Transforms RAG and KV Cache Performance",
+   "url": "https://www.asteralabs.com/resources/blog/breaking-through-the-memory-wall-how-cxl-transforms-rag-and-kv-cache-performance",
+   "site": "asteralabs.com",
+   "date": ""
+  },
+  {
+   "id": "WM4",
+   "kind": "web",
+   "tech": "sw",
+   "title": "Overcoming the Memory Bottleneck: CXL Expansion and KV Cache Compression Innovations | TrendForce",
+   "url": "https://www.trendforce.com/research/download/RP260715HU",
+   "site": "trendforce.com",
+   "date": ""
+  },
+  {
+   "id": "WM5",
+   "kind": "web",
+   "tech": "sw",
+   "title": "Global Lightning Arrester Market Size To Exceed USD 1498 Million By 2033 | CAGR Of 5.96%",
+   "url": "https://finance.yahoo.com/news/global-lightning-arrester-market-size-090000039.html",
+   "site": "finance.yahoo.com",
+   "date": ""
+  },
+  {
+   "id": "WM6",
+   "kind": "web",
+   "tech": "sw",
+   "title": "Optimizing Inference for Long Context and Large Batch ...",
+   "url": "https://developer.nvidia.com/blog/optimizing-inference-for-long-context-and-large-batch-sizes-with-nvfp4-kv-cache",
+   "site": "developer.nvidia.com",
+   "date": ""
+  },
+  {
+   "id": "WM7",
+   "kind": "web",
+   "tech": "hw",
+   "title": "CXL-Enabled KV-Cache Management Beyond GPU Limits",
+   "url": "https://arxiv.org/html/2511.00321v1",
+   "site": "arxiv.org",
+   "date": ""
+  },
+  {
+   "id": "WM8",
+   "kind": "web",
+   "tech": "hw",
+   "title": "Using CXL Fabric-Attached Memory to Enable Shared KV ...",
+   "url": "https://www.snia.org/sniadeveloper/session/19665",
+   "site": "snia.org",
+   "date": ""
+  },
+  {
+   "id": "WM9",
+   "kind": "web",
+   "tech": "hw",
+   "title": "Breaking AI Memory Limits with CXL Memory Pooling",
+   "url": "https://semiconductor.samsung.com/news-events/tech-blog/breaking-ai-memory-limits-with-cxl-memory-pooling",
+   "site": "semiconductor.samsung.com",
+   "date": ""
+  },
+  {
+   "id": "WM10",
+   "kind": "web",
+   "tech": "sw",
+   "title": "What Is KV Cache Quantization? Definition & Examples",
+   "url": "https://nhimg.org/glossary/kv-cache-quantization",
+   "site": "nhimg.org",
+   "date": ""
+  },
+  {
+   "id": "WM11",
+   "kind": "web",
+   "tech": "sw",
+   "title": "KV Cache is huge and bottlenecks LLM inference. We ...",
+   "url": "https://www.reddit.com/r/LocalLLaMA/comments/1ap3bkt/kv_cache_is_huge_and_bottlenecks_llm_inference_we",
+   "site": "reddit.com",
+   "date": ""
+  },
+  {
+   "id": "WM12",
+   "kind": "web",
+   "tech": "sw",
+   "title": "Quantizing KV Cache: Attention Risks and Trade-Offs | Togo AI ...",
+   "url": "https://www.linkedin.com/posts/togo-ai-labs_why-quantizing-the-kv-cache-can-break-attention-activity-7406656857668374529-djFi",
+   "site": "linkedin.com",
+   "date": ""
+  },
+  {
+   "id": "WM13",
+   "kind": "web",
+   "tech": "hw",
+   "title": "Penguin Solutions Introduces Industry's First Production-Ready CXL-Based KV Cache Server",
+   "url": "https://www.stocktitan.net/news/PENG/penguin-solutions-introduces-industry-s-first-production-ready-cxl-pxfpc1e4d2nz.html",
+   "site": "stocktitan.net",
+   "date": ""
+  },
+  {
+   "id": "WM14",
+   "kind": "web",
+   "tech": "sw",
+   "title": "Google TurboQuant in August 2026: Where It Actually Runs",
+   "url": "https://o-mega.ai/articles/google-turboquant-the-2026-llm-compression-guide",
+   "site": "o-mega.ai",
+   "date": ""
+  },
+  {
+   "id": "WM15",
+   "kind": "web",
+   "tech": "sw",
+   "title": "TurboQuant: the new(?) and controversial ground breaking ...",
+   "url": "https://boringbot.substack.com/p/turboquant-the-new-and-controversial",
+   "site": "boringbot.substack.com",
+   "date": ""
+  },
+  {
+   "id": "WM16",
+   "kind": "web",
+   "tech": "sw",
+   "title": "อัลกอริทึมการบีบอัด TurboQuant ของ Google คืออะไร? และจะส่งผลกระทบต่ออุตสาหกรรมชิปจัดเก็บข้อมูลสำหรับ AI อย่างไร?",
+   "url": "https://www.tradingkey.com/th/analysis/stocks/us-stocks/261728273-what-is-google-turboquant-compression-algorithm-how-impact-ai-memory-chip-industry-tradingkey",
+   "site": "tradingkey.com",
+   "date": ""
+  },
+  {
+   "id": "WM17",
+   "kind": "web",
+   "tech": "hw",
+   "title": "LLM KV Cache Storage Using CXL Memory",
+   "url": "https://ieeexplore.ieee.org/document/11642129",
+   "site": "ieeexplore.ieee.org",
+   "date": ""
+  },
+  {
+   "id": "WM18",
+   "kind": "web",
+   "tech": "sw",
+   "title": "อัลกอริทึมการบีบอัด TurboQuant ของ Google คืออะไร? และจะส่งผลกระทบต่ออุตสาหกรรมชิปจัดเก็บข้อมูลสำหรับ AI อย่างไร?",
+   "url": "https://tradingkey.com/th/analysis/stocks/us-stocks/261728273-what-is-google-turboquant-compression-algorithm-how-impact-ai-memory-chip-industry-tradingkey",
+   "site": "tradingkey.com",
+   "date": ""
+  },
+  {
+   "id": "WM19",
+   "kind": "web",
+   "tech": "sw",
+   "title": "หุ้น Micron ปรับตัวร่วงลง การโจมตีอย่างแม่นยำโดย Google TurboQuant? อาณาจักรหน่วยความจำ AI ของ Micron กำลังเผชิญกับบททดสอบ",
+   "url": "https://tradingkey.com/th/analysis/stocks/us-stocks/261723403-micron-stock-price-declining-google-turboquant-striking-tradingkey",
+   "site": "tradingkey.com",
+   "date": ""
+  },
+  {
+   "id": "WM20",
+   "kind": "web",
+   "tech": "hw",
+   "title": "How CXL Memory Expansion Improves AI Economics",
+   "url": "https://www.asteralabs.com/resources/blog/inference-tokenomics-how-cxl-memory-expansion-improves-ai-economics",
+   "site": "asteralabs.com",
+   "date": ""
+  },
+  {
+   "id": "WM21",
+   "kind": "web",
+   "tech": "hw",
+   "title": "Predictive Multi-Tier Memory Management for KV Cache ...",
+   "url": "https://arxiv.org/html/2604.26968v2",
+   "site": "arxiv.org",
+   "date": ""
+  },
+  {
+   "id": "WM22",
+   "kind": "web",
+   "tech": "hw",
+   "title": "SGLang vs vLLM: H100 Benchmarks, with TensorRT-LLM",
+   "url": "https://jarvislabs.ai/blog/vllm-sglang-trtllm-comparison",
+   "site": "jarvislabs.ai",
+   "date": ""
+  },
+  {
+   "id": "WM23",
+   "kind": "web",
+   "tech": "sw",
+   "title": "vLLM vs SGLang vs TensorRT-LLM - Inference Engineering",
+   "url": "https://inferenceengineering.tech/learn/vllm-vs-sglang-vs-tensorrt-llm",
+   "site": "inferenceengineering.tech",
+   "date": ""
+  },
+  {
+   "id": "WM24",
+   "kind": "web",
+   "tech": "sw",
+   "title": "[Usage]: Does TensorRT-LLM support acquiring KV events ...",
+   "url": "https://github.com/NVIDIA/TensorRT-LLM/issues/6979",
+   "site": "github.com",
+   "date": ""
+  },
+  {
+   "id": "WM25",
+   "kind": "web",
+   "tech": "sw",
+   "title": "KV Cache as the New AI Memory Abstraction",
+   "url": "https://www.youtube.com/watch?v=HxhuAl1wQpE&vl=en",
+   "site": "youtube.com",
+   "date": ""
+  },
+  {
+   "id": "WM26",
+   "kind": "web",
+   "tech": "sw",
+   "title": "Penguin Solutions unveils first CXL KV cache server | PENG Stock News",
+   "url": "https://stocktitan.net/news/PENG/penguin-solutions-introduces-industry-s-first-production-ready-cxl-pxfpc1e4d2nz.html",
+   "site": "stocktitan.net",
+   "date": ""
+  },
+  {
+   "id": "WM27",
+   "kind": "web",
+   "tech": "hw",
+   "title": "ITME: Inference Tiered Memory Expansion with ...",
+   "url": "https://arxiv.org/html/2606.12556v2",
+   "site": "arxiv.org",
+   "date": ""
+  },
+  {
+   "id": "WM28",
+   "kind": "web",
+   "tech": "hw",
+   "title": "CXL Memory Expansion For AI Workloads Market Size & ...",
+   "url": "https://www.mordorintelligence.com/industry-reports/cxl-memory-expansion-for-ai-workloads-market",
+   "site": "mordorintelligence.com",
+   "date": ""
+  },
+  {
+   "id": "WM29",
+   "kind": "web",
+   "tech": "hw",
+   "title": "CXL 4.0 Infrastructure Planning Guide | Introl Blog",
+   "url": "https://introl.com/blog/cxl-4-0-infrastructure-planning-guide-ai-memory-pooling-2025",
+   "site": "introl.com",
+   "date": ""
+  }
+ ]
+}

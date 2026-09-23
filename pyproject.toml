@@ -1,0 +1,27 @@
+[project]
+name = "kv-cache-report"
+version = "0.1.0"
+description = "KV cache 최적화 기술(SW vs HW) 다관점 평가 - LangGraph Multi-Agent + Agentic RAG"
+authors = [
+    { name = "yunanana", email = "jiyusu04@naver.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "faiss-cpu<1.10",
+    "fastembed>=0.4.2",
+    "fpdf2>=2.8.8",
+    "langchain>=1.4.2",
+    "langchain-community>=0.4.2",
+    "langchain-openai>=1.6.4",
+    "langchain-text-splitters>=1.1.2",
+    "langgraph>=1.2.12",
+    "markdown>=3.10.3",
+    "onnxruntime<1.20",
+    "pypdf>=6.19.0",
+    "python-dotenv>=1.2.3",
+    "rank-bm25>=0.2.2",
+    "tavily-python>=0.8.4",
+]
+
+[tool.uv]
+package = false

@@ -1,0 +1,19 @@
+[rag] 220 chunks / embedding = snowflake/snowflake-arctic-embed-s
+[tech_research] 완료
+[market] 완료 - 웹 출처 29건
+[domain] 완료 - 웹 출처 23건
+[synthesis] 완료
+[report_writer] 초안 v1 작성
+[reviewer] 수정 필요 6건 (4p)
+[report_writer] 초안 v2 작성
+[reviewer] 수정 필요 6건 (6p)
+[report_writer] 초안 v3 작성
+[reviewer] 수정 필요 1건 (5p)
+[exporter] RAG-Output_판교_6반_권유나.pdf (5p) 저장
+
+완료 (180s) - 5 pages
+  PDF  : /Users/gwon-yuna/rag/outputs/RAG-Output_판교_6반_권유나.pdf
+  MD   : /Users/gwon-yuna/rag/outputs/report.md
+  HTML : /Users/gwon-yuna/rag/outputs/report.html
+  검토 잔여 의견:
+   - 우열 판정 표현 '우수' 사용 - 중립적 표현으로 수정
