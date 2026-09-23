@@ -18,6 +18,8 @@ class GroundingTests(unittest.TestCase):
             '품질 손실 1~5% [P-HW p.10]',
             '처리량 99.9% [P-HW p.10][WM1]',
             '4배 압축 [P-SW pp. 17–19]',
+            '처리량 99.9% 향상. [P-HW p.10]',
+            '처리량 99.9% 향상.[P-HW p.10][WD3] 다음 문장.',
         ):
             with self.subTest(claim=claim):
                 self.assertTrue(unsupported_numbers(claim, lambda *_: 'no evidence'))
@@ -27,6 +29,21 @@ class GroundingTests(unittest.TestCase):
         self.assertFalse(unsupported_numbers(claim, lambda *_: 'throughput 35.7%'))
         self.assertTrue(unsupported_numbers(claim, lambda *_: '135.7%'))
         self.assertTrue(unsupported_numbers(claim, lambda s, p: '35.7%' if p == 11 else ''))
+
+    def test_citation_after_period_is_bound_to_claim(self):
+        claim = '최대 35.7% 처리량 향상. [P-HW p.11] 다음 문장 12.5% [P-HW p.11]'
+        flags = unsupported_numbers(claim, lambda *_: 'up to a 35.7% throughput improvement')
+        self.assertEqual(len(flags), 1)
+        self.assertIn("'12.5'", flags[0])
+
+    def test_paragraph_ending_citation_covers_all_sentences(self):
+        claim = '4배 압축(메모리 25%) 시 리콜 유지. 4k~104k 문서로 평가했다. [P-SW p.17]'
+        flags = unsupported_numbers(claim, lambda *_: '4k to 104k tokens, 4x compression')
+        self.assertEqual(len(flags), 1)
+        self.assertIn("'25'", flags[0])
+
+    def test_model_names_are_not_claims(self):
+        self.assertFalse(unsupported_numbers('Llama-3.1 8B 모델 평가 [P-HW p.9]', lambda *_: ''))
 
     def test_citation_numbers_are_not_claims(self):
         self.assertFalse(unsupported_numbers('설명 [P-SW p.17, p.19]', lambda *_: ''))
