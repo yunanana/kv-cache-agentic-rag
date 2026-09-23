@@ -6,7 +6,7 @@ from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
 from rank_bm25 import BM25Okapi
 
-from config import TOP_K
+from config import TOP_K, PAPER_DIR, TECHNOLOGIES
 
 
 def _tokenize(text: str) -> list[str]:
@@ -26,9 +26,11 @@ class HybridRetriever:
         self.rrf_k = rrf_k
         self._by_id = {c.metadata["chunk_id"]: c for c in chunks}
         self._pages: dict[tuple[str, int], str] = {}
-        for c in chunks:
-            key = (c.metadata["source_id"], c.metadata["page"])
-            self._pages[key] = self._pages.get(key, "") + " " + c.page_content
+        # Grounding must use original PDF pages, not filtered/overlapping chunks.
+        from pypdf import PdfReader
+        for tech in TECHNOLOGIES.values():
+            for number, page in enumerate(PdfReader(PAPER_DIR / tech["file"]).pages, 1):
+                self._pages[(tech["source_id"], number)] = page.extract_text() or ""
         self._bm25: dict[str | None, tuple[BM25Okapi, list[Document]]] = {}
         groups: dict[str | None, list[Document]] = {None: chunks}
         for c in chunks:

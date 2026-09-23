@@ -1,10 +1,11 @@
-<!doctype html><html lang='ko'><head><meta charset='utf-8'><title>KV cache 최적화 기술 다관점 평가 보고서</title><style>body{font-family:sans-serif;max-width:860px;margin:40px auto;line-height:1.6;padding:0 16px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bbb;padding:4px 8px;font-size:14px}th{background:#f0f0f0}</style></head><body><h1>KV cache 최적화 기술 다관점 평가 보고서</h1>
+<!doctype html><html lang='ko'><head><meta charset='utf-8'><title>KV cache 최적화 기술 다관점 평가 보고서</title><style>body{font-family:sans-serif;max-width:860px;margin:40px auto;line-height:1.6;padding:0 16px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bbb;padding:4px 8px;font-size:14px}th{background:#f0f0f0}</style></head><body><p>검토 상태: 미통과 / 수정본 재검증 대기 - 기존 자동 검토는 미통과였으며, 이번 수정 후 외부 LLM·웹 검증은 재실행하지 않았습니다. 제출 전 근거 확인이 필요합니다.</p>
+<h1>KV cache 최적화 기술 다관점 평가 보고서</h1>
 <h2>SUMMARY</h2>
 <ul>
-<li>TurboQuant과 ITME는 모두 LLM 추론에서 KV cache 메모리 문제 해결을 목표로 하며, 품질 유지 측면에서 TurboQuant은 저자 보고 기준 무손실 압축을 입증했고, ITME는 설계상 정확도 손실이 없다고 주장하나 수치 보고는 없다.</li>
+<li>TurboQuant은 저자 보고 기준 Llama-3.1-8B-Instruct의 Needle-In-A-Haystack 실험에서 원본과 같은 리콜 0.997을 기록했다. 이는 해당 실험의 점수 유지이며 원본 데이터의 무손실 압축을 뜻하지 않는다[1, p.19]. ITME는 원본 KV를 유지하는 설계이나 정확도 측정 수치는 미보고다[2, p.2].</li>
 <li>두 기술 모두 현재 연구·프로토타입 단계로, 공식 상용 제품 출시나 주요 LLM 서빙 스택 내 공식 통합 근거는 부족하다.</li>
-<li>TurboQuant은 소프트웨어 기반 압축으로 추가 하드웨어 투자 없이 GPU 메모리 수용량 확대와 비용 절감 효과가 수치로 확인되나, 처리량·지연에서 일부 오버헤드가 존재하며 대규모 분산 환경 적용 검증은 부족하다.</li>
-<li>ITME는 CXL-하이브리드 메모리 기반 대규모 메모리 확장과 I/O 병목 완화로 최대 35.7% 처리량 향상 실험 결과가 있으나, 신규 하드웨어 및 복잡한 시스템 통합이 요구되고 직접적인 비용 절감 수치는 논문에 제시되지 않았다.</li>
+<li>TurboQuant의 메모리 축소는 비용 절감 가능성을 시사하지만 실제 운영 TCO 절감의 측정·검증과는 구분해야 한다[1, p.19]. 처리량·지연 오버헤드에 관한 웹 평가는 별도 환경의 간접 근거다[5].</li>
+<li>ITME는 저자 보고 기준 최대 35.7% 처리량 향상 결과가 있으나[2, p.1, p.11], 신규 하드웨어 및 시스템 통합이 필요하며 직접적인 비용 절감 수치는 논문에 제시되지 않았다.</li>
 <li>시장성 관점에서는 TurboQuant이 LLM 추론 최적화 SW 시장 내 간접적 성장 근거를, ITME는 CXL 메모리 확장 시장 내 AI/ML 추론 부문 성장 근거를 바탕으로 각각 중간·높음 등급을 받았다.</li>
 <li>두 기술은 기술적 조합 가능성이 있으나, 실제 통합의 필요성 및 효과는 별도 검토가 필요하며, 다양한 LLM 모델과 상용 환경에서의 장기 운영 검증 및 ROI 분석이 부족하다.</li>
 </ul>
@@ -119,12 +120,12 @@
 <tr>
 <td>D1</td>
 <td>비용 효율 (TCO)</td>
-<td>높음</td>
-<td>높음</td>
-<td>4배 압축 시 품질 유지, GPU당 수용량 확대 및 비용 절감 사례 보고[10][1, p.17]</td>
+<td>중간</td>
+<td>낮음</td>
+<td>메모리 축소는 비용 절감 가능성의 간접 근거이며 실제 운영 TCO 측정과 구분 필요[10][1, p.19]</td>
 <td>중간</td>
 <td>중간</td>
-<td>최대 35.7% 처리량 향상 보고, 신규 하드웨어 투자 필요[2, p.1][11]</td>
+<td>최대 35.7% 처리량 향상 보고, 신규 하드웨어 투자 필요[2, p.1]. 인접 기술 자료는 간접 근거[11]</td>
 </tr>
 <tr>
 <td>D2</td>
@@ -140,11 +141,11 @@
 <td>D3</td>
 <td>품질 유지</td>
 <td>높음</td>
-<td>높음</td>
-<td>4배 압축 시 리콜 점수 0.997로 무손실 확인, 다양한 모델에서 무손실 보고[1, p.17][12]</td>
-<td>높음(설계상)</td>
 <td>중간</td>
-<td>KV cache 데이터 변경 없이 무손실 구조 주장, 정확도 수치 미보고[2, p.2]</td>
+<td>저자 보고 기준 Llama-3.1-8B-Instruct의 Needle-In-A-Haystack 실험에서 원본과 같은 리콜 0.997. 해당 실험의 점수 유지이며 무손실 압축의 입증은 아님[1, p.19]</td>
+<td>판단 유보</td>
+<td>중간</td>
+<td>KV cache 원본 유지 설계이나 정확도 측정 수치는 미보고[2, p.2]</td>
 </tr>
 <tr>
 <td>D4</td>
@@ -160,9 +161,9 @@
 </table>
 <h4>해석</h4>
 <ul>
-<li><strong>비용 효율</strong>: TurboQuant은 추가 하드웨어 없이 GPU당 수용량 확대와 비용 절감이 수치로 확인된다. ITME는 처리량 향상과 간접적 비용 절감 가능성을 보이나, 신규 인프라 투자 필요성이 비용 효율성에 영향을 준다.</li>
+<li><strong>비용 효율</strong>: TurboQuant의 메모리 축소는 비용 절감 가능성의 간접 근거이며 실제 운영 TCO 절감액이 검증됐다는 뜻은 아니다. ITME도 처리량 향상과 비용 절감 가능성을 구분해야 하며 신규 인프라 투자 비용을 고려해야 한다.</li>
 <li><strong>처리량·지연</strong>: TurboQuant은 일부 환경에서 처리량 저하와 지연 증가가 보고되나, 버스트 부하 시 SLO 유지에 기여한다. ITME는 하드웨어 기반 처리량 향상과 지연 완화가 보고되나, FPGA 오버헤드와 인프라 조건에 따른 성능 변동성이 존재한다.</li>
-<li><strong>품질 유지</strong>: TurboQuant은 저자 보고 기준 무손실 압축을 입증했다. ITME는 설계상 정확도 손실이 없다고 주장하나, 수치 보고는 없다.</li>
+<li><strong>품질 유지</strong>: TurboQuant은 저자 보고 기준 해당 리콜 실험에서 점수 저하가 관측되지 않았다[1, p.19]. ITME는 원본 KV 유지 설계와 실제 정확도 측정을 구분해야 하며 정확도 측정 수치는 미보고다[2, p.2].</li>
 <li><strong>도입 용이성</strong>: TurboQuant은 소프트웨어 변경만으로 도입 가능하나 대규모 분산 환경 검증이 부족하다. ITME는 신규 하드웨어 및 복잡한 시스템 통합이 요구된다.</li>
 </ul>
 <h2>5. 시사점</h2>
@@ -178,9 +179,9 @@
 <tbody>
 <tr>
 <td>비용 효율 (TCO) - TurboQuant</td>
-<td>추가 하드웨어 투자 없이 비용 절감 효과가 수치로 확인됨</td>
+<td>메모리 축소를 통한 비용 절감 가능성은 간접 근거</td>
 <td>처리량·지연 오버헤드와 대규모 환경 적용 한계가 비용 효율성에 영향</td>
-<td>시장은 SW 기반 비용 절감에 주목하나, 도메인은 성능 영향과 환경별 검증 부족을 고려</td>
+<td>메모리 절감과 실제 운영 TCO의 측정·검증은 구분해야 함</td>
 </tr>
 <tr>
 <td>비용 효율 (TCO) - ITME</td>

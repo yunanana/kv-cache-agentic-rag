@@ -2,7 +2,7 @@
 
 import re
 
-from agents.grounding import unsupported_numbers
+from agents.grounding import unsupported_numbers, cited_page_texts
 from agents.schemas import ReviewResult
 from config import MAX_REPORT_PAGES, MAX_REPORT_REVISION, TECHNOLOGIES
 from llm import get_verifier
@@ -48,13 +48,15 @@ def to_source_tags(report_md: str) -> str:
     def convert(m: re.Match) -> str:
         parts = []
         for part in m.group(1).split(";"):
-            mm = re.match(r"\s*(\d+),\s*(p\..+)", part)
+            mm = re.match(r"\s*(\d+),\s*(pp?\..+)", part)
             if mm and mm.group(1) in ref_to_sid:
                 parts.append(f"[{ref_to_sid[mm.group(1)]} {mm.group(2).strip()}]")
+            else:
+                parts.append(f"[{part.strip()}]")
         return "".join(parts) or m.group(0)
 
     body = report_md.split("## REFERENCE")[0]
-    return re.sub(r"\[([^\[\]]*\d+, p\.[^\[\]]*)\]", convert, body)
+    return re.sub(r"\[([^\[\]]*\d+,\s*pp?\.[^\[\]]*)\]", convert, body)
 
 
 def make_reviewer_node(retriever):
@@ -67,7 +69,14 @@ def make_reviewer_node(retriever):
         # 규칙 검사 결과는 모두 critical, LLM Judge 결과는 severity 에 따름
         critical = list(issues)
         minor = []
-        for i in judge.invoke({"report": state["report_md"]}).issues:
+        tagged = to_source_tags(state["report_md"])
+        evidence = cited_page_texts(tagged, retriever.page_text)
+        web = "\n\n".join(
+            f"### {s.get('id')} {s.get('url')}\n{s.get('content') or '[수집 본문 없음: 근거 미확인]'}"
+            for s in state.get("sources", []) if s.get("kind") != "paper"
+        )
+        for i in judge.invoke({"report": state["report_md"],
+                               "evidence": evidence + "\n\n[웹 검색 근거: 원문 전체가 아닌 검색 발췌일 수 있음]\n" + web}).issues:
             (critical if i.severity == "critical" else minor).append(f"'{i.quote[:80]}' → {i.fix}")
         passed = not critical
         print(f"[reviewer] {'통과' if passed else f'수정 필요 {len(critical)}건'} (minor {len(minor)}건, {pages}p)")

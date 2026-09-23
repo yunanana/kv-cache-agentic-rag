@@ -42,7 +42,15 @@ def _pdf_safe_html(html: str) -> str:
         inner = re.sub(r"<br\s*/?>", " / ", m.group(2))
         inner = re.sub(r"<[^>]+>", "", inner)
         return f"<{m.group(1)}>{inner}</{m.group(3)}>"
-    return re.sub(r"<(t[dh](?:\s[^>]*)?)>(.*?)</(t[dh])>", clean_cell, html, flags=re.S)
+    html = re.sub(r"<(t[dh](?:\s[^>]*)?)>(.*?)</(t[dh])>", clean_cell, html, flags=re.S)
+    def size_table(m: re.Match) -> str:
+        table = m.group(0)
+        # Give evidence columns room; equal-width eight-column tables are unreadable.
+        if len(re.findall(r"<th>", table)) == 8:
+            widths = iter((5, 12, 10, 7, 24, 11, 7, 24))
+            table = re.sub(r"<th>", lambda _: f'<th width="{next(widths)}%">', table)
+        return table
+    return re.sub(r"<table>.*?</table>", size_table, html, flags=re.S)
 
 
 def render_pdf(md_text: str) -> FPDF:

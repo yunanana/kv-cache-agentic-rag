@@ -9,7 +9,11 @@ from report.pdf import html_document, save_pdf
 def make_exporter_node(pdf_name: str):
     def exporter(state):
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        review = state["review"]
+        notice = "검토 상태: 미통과 - 자동 검토의 필수 수정 의견이 남아 있습니다. 제출 전 사람이 근거를 확인해야 합니다."
         md = state["report_md"]
+        if not review["passed"]:
+            md = notice + "\n\n" + md
         md_path = OUTPUT_DIR / "report.md"
         html_path = OUTPUT_DIR / "report.html"
         pdf_path = OUTPUT_DIR / pdf_name
