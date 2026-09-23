@@ -146,6 +146,19 @@ graph LR
 병렬로 실행되는 두 평가 에이전트는 결과를 서로 다른 키(`market_eval` / `domain_eval`)에 쓰고, 함께 추가하는 `sources`, `trace`는 reducer로 누적해 동시 갱신 충돌을 막았습니다. 웹 출처 ID도 노드별 prefix(`WM`, `WD`)로 분리했습니다.
 
 
+## 제출 산출물 구분
+| 구분 | 파일 |
+|---|---|
+| 자동 생성 원본 (시스템이 실제로 낸 결과, 자동 검토 미통과) | [`outputs/auto_generated/`](outputs/auto_generated/) |
+| 정정본 (제출 PDF, AI 도구로 출처 대조 후 수정) | [`outputs/RAG-Output_판교_6반_권유나.pdf`](outputs/RAG-Output_판교_6반_권유나.pdf) |
+| 수정 내역 (무엇을 왜 고쳤는지, 전체 diff) | [`outputs/CORRECTIONS.md`](outputs/CORRECTIONS.md) |
+| 출처 대조 기록 | [`outputs/review.md`](outputs/review.md) |
+
+- 시스템의 실제 결과와 한계를 보여주기 위해 원본을 수정 없이 보존했고, 잘못된 정보가 남지 않도록 정정본을 별도로 제공합니다.
+- **정정본은 자동 실행만으로 재현되지 않습니다.** `app.py`를 실행하면 원본과 같은 과정으로 새 보고서가 생성되며, LLM 특성상 문장은 실행마다 달라집니다.
+- 원본에서 확인된 오류 유형 : 벤치마크 점수 유지를 '무손실'로 과장, 계산 시나리오를 측정된 비용 절감으로 서술, 측정되지 않은 품질을 '높음'으로 판정, 인접 기술 자료를 직접 근거로 사용. RAG로 근거 없는 수치 생성은 줄었지만, **근거의 해석 오류와 다단계 요약 과정의 과장**은 남았고 이를 검증 단계에서 탐지했습니다.
+
+
 ## Directory Structure
 ```
 ├── app.py                  # 실행 스크립트 (논문 준비 → 인덱스 → 그래프 실행 → 보고서 저장)
@@ -175,7 +188,8 @@ graph LR
 │   ├── download_papers.py  # Doc Pool 논문 다운로드 (arXiv)
 │   └── eval_retrieval.py   # 임베딩·검색기 평가 (Hit Rate@K, MRR)
 ├── data/                   # 논문 PDF·인덱스 (git 제외, 실행 시 자동 생성) / eval/qa.json 평가셋
-└── outputs/                # 평가 보고서(PDF/MD/HTML), 검색 평가 결과, 중간 결과(run_state.json)
+└── outputs/                # 정정본 보고서(PDF/MD/HTML), 수정 내역, 검색 평가 결과, 중간 결과
+    └── auto_generated/     # 자동 생성 원본 보고서·검토 기록 (수정하지 않음)
 ```
 
 
