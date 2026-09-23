@@ -43,8 +43,9 @@ def main():
     out = final["outputs"]
     print(f"\n완료 ({time.time() - start:.0f}s) - {out['pages']} pages")
     print(f"  PDF  : {out['pdf']}\n  MD   : {out['md']}\n  HTML : {out['html']}")
-    if final["review"]["issues"]:
-        print("  검토 잔여 의견:", *final["review"]["issues"], sep="\n   - ")
+    if not out["review_passed"]:
+        print(f"\n[주의] 자동 검토를 통과하지 못한 채 저장됨 - {out['review']} 의 잔여 의견을 확인하세요:")
+        print(*final["review"]["issues"], sep="\n   - ")
 
 
 if __name__ == "__main__":

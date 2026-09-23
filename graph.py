@@ -20,7 +20,7 @@ def build_graph(retriever: HybridRetriever, pdf_name: str = "report.pdf"):
     g.add_node("domain_evaluation", make_perspective_node(retriever, "domain"))
     g.add_node("synthesis", make_synthesis_node())
     g.add_node("report_writer", make_report_writer_node())
-    g.add_node("reviewer", make_reviewer_node())
+    g.add_node("reviewer", make_reviewer_node(retriever))
     g.add_node("exporter", make_exporter_node(pdf_name))
 
     g.add_edge(START, "tech_research")
@@ -31,8 +31,11 @@ def build_graph(retriever: HybridRetriever, pdf_name: str = "report.pdf"):
     g.add_edge(["market_evaluation", "domain_evaluation"], "synthesis")
     g.add_edge("synthesis", "report_writer")
     g.add_edge("report_writer", "reviewer")
-    # Loop : 검토 미통과 시 재작성 (최대 MAX_REPORT_REVISION 회)
-    g.add_conditional_edges("reviewer", route_after_review, {"revise": "report_writer", "approve": "exporter"})
+    # Loop : 검토 미통과 시 재작성 (최대 MAX_REPORT_REVISION 회). 한도 도달 시 '검토 미통과'로 표시해 저장
+    g.add_conditional_edges(
+        "reviewer", route_after_review,
+        {"revise": "report_writer", "approve": "exporter", "unverified": "exporter"},
+    )
     g.add_edge("exporter", END)
 
     return g.compile()

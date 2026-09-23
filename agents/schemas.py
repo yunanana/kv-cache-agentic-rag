@@ -46,6 +46,13 @@ class Synthesis(BaseModel):
     caveats: list[str] = Field(description="종합 시 유의할 점 (정보 비대칭, 저자 자체 실험 의존 등)")
 
 
+class ReviewIssue(BaseModel):
+    severity: Literal["critical", "minor"] = Field(
+        description="critical: 사실·수치 오류, 출처가 주장을 뒷받침하지 않음, 명시적 우열 판정·추천, 필수 섹션 누락 / "
+                    "minor: 표현 다듬기, 강조 부족 등 개선 제안")
+    quote: str = Field(description="문제가 되는 보고서 원문 구절 (그대로 인용)")
+    fix: str = Field(description="구체적인 수정 지시")
+
+
 class ReviewResult(BaseModel):
-    passed: bool
-    issues: list[str] = Field(description="구체적인 수정 지시 목록")
+    issues: list[ReviewIssue] = Field(description="발견한 문제 목록 (없으면 빈 리스트)")

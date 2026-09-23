@@ -2,7 +2,7 @@
 
 from langchain_openai import ChatOpenAI
 
-from config import JUDGE_MODEL, LLM_MODEL
+from config import JUDGE_MODEL, LLM_MODEL, VERIFY_MODEL
 
 
 def _chat(model: str) -> ChatOpenAI:
@@ -18,3 +18,7 @@ def get_llm() -> ChatOpenAI:
 
 def get_judge() -> ChatOpenAI:
     return _chat(JUDGE_MODEL)
+
+
+def get_verifier() -> ChatOpenAI:
+    return _chat(VERIFY_MODEL)

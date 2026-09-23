@@ -1,8 +1,9 @@
 """🔍 기술 조사 에이전트 (RAG) : 논문 원문에서 기술 개요·성과·한계를 추출."""
 
 from agents.common import paper_source, run_per_tech, to_json
+from agents.grounding import cited_page_texts, unsupported_numbers
 from agents.schemas import TechProfile
-from llm import get_judge, get_llm
+from llm import get_llm, get_verifier
 from prompts.criteria import TECH_RESEARCH_QUESTIONS
 from prompts.templates import PROFILE_CHECK_PROMPT, TECH_PROFILE_PROMPT
 from rag.agentic import agentic_search
@@ -11,7 +12,7 @@ from rag.retriever import HybridRetriever, format_docs
 
 def make_tech_research_node(retriever: HybridRetriever):
     chain = TECH_PROFILE_PROMPT | get_llm().with_structured_output(TechProfile)
-    checker = PROFILE_CHECK_PROMPT | get_judge().with_structured_output(TechProfile)
+    checker = PROFILE_CHECK_PROMPT | get_verifier().with_structured_output(TechProfile)
 
     def research(tech: dict) -> dict:
         findings = [agentic_search(retriever, q, tech) for q in TECH_RESEARCH_QUESTIONS]
@@ -22,7 +23,14 @@ def make_tech_research_node(retriever: HybridRetriever):
             "name": tech["name"], "camp": tech["camp"], "paper_title": tech["paper_title"], "evidence": evidence,
         })
         # Reflection : baseline·관련 연구 서술이 대상 기술 항목에 섞였는지 검증 후 수정
-        checked = checker.invoke({"name": tech["name"], "profile": to_json(profile.model_dump()), "evidence": evidence})
+        flags = unsupported_numbers(to_json(profile.model_dump()), retriever.page_text)
+        checked = checker.invoke({
+            "name": tech["name"],
+            "profile": to_json(profile.model_dump()),
+            "evidence": evidence
+            + "\n\n[인용된 논문 페이지 원문]\n" + cited_page_texts(to_json(profile.model_dump()), retriever.page_text)
+            + ("\n\n[규칙 검사기 표시 문제 - 반드시 해소]\n" + "\n".join(flags) if flags else ""),
+        })
         return {"profile": checked.model_dump(), "findings": findings}
 
     def tech_research(state):

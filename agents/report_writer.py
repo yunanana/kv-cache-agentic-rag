@@ -76,9 +76,12 @@ def make_report_writer_node():
     def report_writer(state):
         review = state.get("review") or {}
         feedback = ""
-        if review.get("issues"):
-            feedback = "[이전 초안 검토 의견 - 반드시 반영하여 전체 보고서를 다시 작성]\n" + "\n".join(
-                f"- {i}" for i in review["issues"]
+        if review.get("issues") or review.get("minor"):
+            feedback = (
+                "[이전 초안 검토 의견 - 반영하여 전체 보고서를 다시 작성]\n"
+                "(필수) 아래 문제는 반드시 해소한다. 인용 페이지에 없는 수치는 실제 출처(웹 태그)로 인용을 바꾸거나 삭제한다.\n"
+                + "\n".join(f"- {i}" for i in review.get("issues", []))
+                + "\n(권장)\n" + "\n".join(f"- {i}" for i in review.get("minor", []))
             )
         draft = chain.invoke({
             "domain": state["domain"]["name"],

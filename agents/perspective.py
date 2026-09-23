@@ -5,10 +5,11 @@
 """
 
 from agents.common import WebSourceRegistry, format_web, run_per_tech, to_json
+from agents.grounding import cited_page_texts, unsupported_numbers
 from agents.schemas import PerspectiveEvaluation
-from llm import get_llm
+from llm import get_llm, get_verifier
 from prompts.criteria import DOMAIN_CRITERIA, MARKET_CRITERIA
-from prompts.templates import PERSPECTIVE_PROMPT
+from prompts.templates import EVAL_CHECK_PROMPT, PERSPECTIVE_PROMPT
 from rag.agentic import agentic_search
 from rag.retriever import HybridRetriever, format_docs
 
@@ -38,6 +39,7 @@ def _criteria_text(criteria: list[dict]) -> str:
 def make_perspective_node(retriever: HybridRetriever, perspective: str):
     cfg = PERSPECTIVES[perspective]
     chain = PERSPECTIVE_PROMPT | get_llm().with_structured_output(PerspectiveEvaluation)
+    checker = EVAL_CHECK_PROMPT | get_verifier().with_structured_output(PerspectiveEvaluation)
 
     def node(state):
         domain = state["domain"]
@@ -66,16 +68,30 @@ def make_perspective_node(retriever: HybridRetriever, perspective: str):
                     f"[논문 근거]\n{chr(10).join(p for p in rag_parts if p) or '(관련 근거를 찾지 못함)'}\n"
                     f"[웹 근거]\n{format_web(web) or '(검색 결과 없음)'}"
                 )
+            criteria = _criteria_text(cfg["criteria"])
+            evidence = "\n\n".join(blocks)
             result = chain.invoke({
                 "perspective": cfg["label"],
                 "perspective_description": description,
-                "criteria": _criteria_text(cfg["criteria"]),
+                "criteria": criteria,
                 "name": tech["name"],
                 "camp": tech["camp"],
                 "profile": to_json(state["tech_profiles"][tech["key"]]),
-                "evidence": "\n\n".join(blocks),
+                "evidence": evidence,
             })
-            return result.model_dump()
+            # Reflection : 수치-지표, 출처-주장 일치 검증 (규칙 검사 결과를 함께 전달)
+            flags = unsupported_numbers(to_json(result.model_dump()), retriever.page_text)
+            checked = checker.invoke({
+                "perspective": cfg["label"],
+                "criteria": criteria,
+                "name": tech["name"],
+                "evaluation": to_json(result.model_dump()),
+                "flags": "\n".join(f"- {f}" for f in flags) or "(없음)",
+                "evidence": evidence + "\n\n[인용된 논문 페이지 원문 - 수치의 지표·조건을 이 원문으로 대조]\n"
+                            + cited_page_texts(to_json(result.model_dump()), retriever.page_text),
+            })
+            trace.append({"agent": f"{perspective}_check", "tech": tech["key"], "flags": flags})
+            return checked.model_dump()
 
         evaluations = run_per_tech(evaluate, state["technologies"])
         print(f"[{perspective}] 완료 - 웹 출처 {len(registry.sources)}건")

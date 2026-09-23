@@ -2,15 +2,16 @@
 
 import re
 
+from agents.grounding import unsupported_numbers
 from agents.schemas import ReviewResult
-from config import MAX_REPORT_PAGES, MAX_REPORT_REVISION
-from llm import get_judge
+from config import MAX_REPORT_PAGES, MAX_REPORT_REVISION, TECHNOLOGIES
+from llm import get_verifier
 from prompts.templates import REVIEW_PROMPT
 from report.pdf import count_pages
 
 REQUIRED_SECTIONS = ["SUMMARY", "1. 분석 배경", "2. 기술 선정", "3. 기술 개요", "4. 관점별 평가",
                      "5. 시사점", "6. 한계점", "REFERENCE"]
-BIAS_WORDS = ["추천한다", "우수", "우월", "승자", "유리하다"]
+BIAS_WORDS = ["추천한다", "더 우수", "우월", "승자", "유리하다"]
 
 
 def rule_check(report_md: str) -> tuple[list[str], int]:
@@ -36,21 +37,49 @@ def rule_check(report_md: str) -> tuple[list[str], int]:
     return issues, pages
 
 
-def make_reviewer_node():
-    judge = REVIEW_PROMPT | get_judge().with_structured_output(ReviewResult)
+def to_source_tags(report_md: str) -> str:
+    """REFERENCE 번호를 논문 source_id로 되돌려 ([1, p.17] → [P-SW p.17]) 수치 근거 검사에 사용."""
+    ref_to_sid = {}
+    for n, line in re.findall(r"^(\d+)\. (.+)$", report_md.split("## REFERENCE")[-1], flags=re.M):
+        for t in TECHNOLOGIES.values():
+            if t["arxiv_id"] in line:
+                ref_to_sid[n] = t["source_id"]
+
+    def convert(m: re.Match) -> str:
+        parts = []
+        for part in m.group(1).split(";"):
+            mm = re.match(r"\s*(\d+),\s*(p\..+)", part)
+            if mm and mm.group(1) in ref_to_sid:
+                parts.append(f"[{ref_to_sid[mm.group(1)]} {mm.group(2).strip()}]")
+        return "".join(parts) or m.group(0)
+
+    body = report_md.split("## REFERENCE")[0]
+    return re.sub(r"\[([^\[\]]*\d+, p\.[^\[\]]*)\]", convert, body)
+
+
+def make_reviewer_node(retriever):
+    judge = REVIEW_PROMPT | get_verifier().with_structured_output(ReviewResult)
 
     def reviewer(state):
         issues, pages = rule_check(state["report_md"])
-        verdict = judge.invoke({"report": state["report_md"]})
-        issues += verdict.issues if not verdict.passed else []
-        passed = not issues
-        print(f"[reviewer] {'통과' if passed else f'수정 필요 {len(issues)}건'} ({pages}p)")
-        return {"review": {"passed": passed, "issues": issues, "pages": pages}}
+        issues += [f"{f} - 원문 지표대로 고치거나 삭제할 것"
+                   for f in unsupported_numbers(to_source_tags(state["report_md"]), retriever.page_text)]
+        # 규칙 검사 결과는 모두 critical, LLM Judge 결과는 severity 에 따름
+        critical = list(issues)
+        minor = []
+        for i in judge.invoke({"report": state["report_md"]}).issues:
+            (critical if i.severity == "critical" else minor).append(f"'{i.quote[:80]}' → {i.fix}")
+        passed = not critical
+        print(f"[reviewer] {'통과' if passed else f'수정 필요 {len(critical)}건'} (minor {len(minor)}건, {pages}p)")
+        return {"review": {"passed": passed, "issues": critical, "minor": minor, "pages": pages}}
 
     return reviewer
 
 
 def route_after_review(state) -> str:
-    if state["review"]["passed"] or state.get("revision_count", 0) >= MAX_REPORT_REVISION:
+    if state["review"]["passed"]:
         return "approve"
-    return "revise"
+    if state.get("revision_count", 0) < MAX_REPORT_REVISION:
+        return "revise"
+    # 재작성 한도 도달 : 저장은 하되 '검토 미통과'로 표시하고 잔여 의견을 별도 파일로 남겨 사람이 확인하게 한다
+    return "unverified"

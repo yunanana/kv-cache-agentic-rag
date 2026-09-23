@@ -25,6 +25,10 @@ class HybridRetriever:
         self.k = k
         self.rrf_k = rrf_k
         self._by_id = {c.metadata["chunk_id"]: c for c in chunks}
+        self._pages: dict[tuple[str, int], str] = {}
+        for c in chunks:
+            key = (c.metadata["source_id"], c.metadata["page"])
+            self._pages[key] = self._pages.get(key, "") + " " + c.page_content
         self._bm25: dict[str | None, tuple[BM25Okapi, list[Document]]] = {}
         groups: dict[str | None, list[Document]] = {None: chunks}
         for c in chunks:
@@ -55,6 +59,9 @@ class HybridRetriever:
                 fused[cid] = fused.get(cid, 0.0) + 1.0 / (self.rrf_k + rank + 1)
         top = sorted(fused, key=fused.get, reverse=True)[:k]
         return [by_id[cid] for cid in top]
+
+    def page_text(self, source_id: str, page: int) -> str:
+        return self._pages.get((source_id, page), "")
 
     def with_context(self, doc: Document, chars: int = 500) -> Document:
         """앞 청크의 끝부분을 붙여 반환 (Parent Document 방식의 문맥 보강).

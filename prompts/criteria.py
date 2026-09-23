@@ -84,11 +84,13 @@ DOMAIN_CRITERIA = [
     {
         "id": "D3",
         "name": "품질 유지",
-        "target": "모델 정확도·출력 품질 손실 위험 (서비스 품질 SLA 관점)",
-        "rubric": "높음: 품질 손실이 없거나 무시 가능함이 여러 벤치마크로 확인 / 중간: 조건부 손실 존재 "
-                  "/ 낮음: 유의미한 손실 / 판단 유보: 근거 부족",
+        "target": "모델 정확도·출력 품질 손실 위험 (서비스 품질 SLA 관점). 정확도·벤치마크 점수만 품질 근거로 보며, "
+                  "지연·TTFT·처리량·end-to-end performance 차이는 품질 근거가 아니다(D2에서 다룸). "
+                  "KV 값을 변경하지 않는 무손실 구조는 '설계상 정확도 손실 요인 없음(측정값 아님)'으로 구분해 쓴다.",
+        "rubric": "높음: 정확도 벤치마크로 손실이 없거나 무시 가능함이 확인되거나, KV 값을 변경하지 않는 무손실 구조 "
+                  "/ 중간: 조건부 정확도 손실 존재 / 낮음: 유의미한 정확도 손실 / 판단 유보: 근거 부족",
         "rag_questions": [
-            "Does the method affect model accuracy or output quality? Which benchmarks and accuracy results are reported?",
+            "Does the method change or approximate the stored KV values, and which accuracy benchmarks (scores, recall) are reported?",
         ],
         "web_queries": ["{search_name} accuracy quality degradation"],
     },

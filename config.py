@@ -19,6 +19,7 @@ OUTPUT_DIR = ROOT / "outputs"
 # ── LLM ───────────────────────────────────────────────
 LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4.1-mini")      # 조사·평가·보고서 생성
 JUDGE_MODEL = os.getenv("JUDGE_MODEL", "gpt-4.1-mini")  # 관련성 판정·보고서 검토
+VERIFY_MODEL = os.getenv("VERIFY_MODEL", "gpt-4.1")     # 수치·출처 원문 대조 검증 (호출 수가 적어 상위 모델 사용)
 
 # ── RAG ───────────────────────────────────────────────
 # 오픈소스 임베딩 : scripts/eval_retrieval.py 실험 결과(Hit Rate@K, MRR)로 선정

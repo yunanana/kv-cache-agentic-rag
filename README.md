@@ -28,7 +28,12 @@ Multi-Agent + Agentic RAG 시스템입니다. 특정 기술을 추천하거나 �
 - **Hybrid Retrieval** : BM25(키워드: CXL, 3-bit, throughput 등 고유 용어) + Dense(의미 유사도)를 Reciprocal Rank Fusion으로 결합
 - **평가 기준 명시** : 관점별 기준·등급 루브릭을 코드로 정의(`prompts/criteria.py`)하고 모든 평가를 같은 루브릭으로 판정
 - **인용 기반 REFERENCE 자동 생성** : 본문 인용 태그(`[P-SW p.3]`, `[WM2]`)를 번호로 변환하고, **실제로 인용된 자료만** 가이드 형식으로 REFERENCE에 기재
-- **보고서 검토 Loop** : 규칙 검사(목차·SUMMARY 길이·10페이지 제한·우열 표현) + LLM-as-a-Judge 검토 → 미통과 시 피드백을 반영해 재작성 (최대 2회)
+- **수치·출처 검증 (Grounding)**
+  - 규칙 검사 : 논문 페이지를 인용한 문장의 수치가 **그 페이지 원문(±1p)에 실제로 있는지** 코드로 대조 (`agents/grounding.py`)
+  - Reflection 검증 : 상위 모델(`gpt-4.1`)이 **인용된 논문 페이지 원문 전체**와 대조해 수치-지표 일치(예: 지연·처리량 수치를 품질 근거로 쓰지 않음), 출처-주장 일치(인접 기술 자료는 '간접 근거'로 표시), 모호한 표현('일부 지원')의 구체화를 검증·수정
+  - 평가 기준 정의에서 지표를 명확히 구분 : D3 품질 유지는 정확도 지표만 근거로 인정, KV 값을 바꾸지 않는 구조는 '설계상 손실 요인 없음(측정값 아님)'으로 구분
+- **보고서 검토 Loop** : 규칙 검사(목차·SUMMARY 길이·10페이지 제한·우열 표현·수치 근거) + LLM-as-a-Judge(문제 구절 인용, critical/minor 구분) → critical 이 있으면 재작성 (최대 2회)
+  - 재작성 한도에 도달해도 critical 이 남으면 **'검토 미통과'로 표시해 저장**하고, 잔여 의견을 `outputs/review.md`에 남겨 사람이 확인하도록 함 (자동 검토가 최종 품질을 보장하지 않으므로 사람 검토 단계를 명시)
 - **확증 편향 방지 전략**
   - 웹 검색 질의를 기준마다 "긍정/채택" 질의와 "리스크/비판" 질의로 쌍을 이뤄 수집
   - 평가 스키마에 `supporting_evidence`와 `counter_evidence`를 모두 필수로 두어 반대 근거를 강제로 탐색 (없으면 "확인된 반대 근거 없음" 명시)
@@ -42,7 +47,8 @@ Multi-Agent + Agentic RAG 시스템입니다. 특정 기술을 추천하거나 �
 |---|---|
 | Framework | LangGraph 1.2, LangChain 1.4, Python 3.11 (uv) |
 | LLM / Generator | `gpt-4.1-mini` (조사·평가·종합·보고서 작성) |
-| LLM / Judge | `gpt-4.1-mini` (검색 관련성 판정, 기술 개요 검증, 보고서 검토) |
+| LLM / Judge | `gpt-4.1-mini` (검색 관련성 판정) |
+| LLM / Verifier | `gpt-4.1` (기술 개요·평가 결과의 원문 대조 검증, 보고서 검토) |
 | Retrieval | FAISS + BM25 Hybrid (RRF) - **Hit Rate@5 0.967, MRR@5 0.917** |
 | Embedding | `snowflake/snowflake-arctic-embed-s` (오픈소스, fastembed/ONNX 로컬 추론) |
 | Web Search | Tavily |
@@ -66,18 +72,19 @@ Multi-Agent + Agentic RAG 시스템입니다. 특정 기술을 추천하거나 �
 | **Hybrid · BM25 + arctic-embed-s** (채택) | **0.867** | **0.967** | 0.967 | **0.917** |
 
 - Dense 중 arctic-embed-s가 모든 지표에서 가장 높아 임베딩 모델로 채택
+- 해석 시 유의 : 위 수치는 **합성 질문 30개에서 정답 청크를 찾은 비율**이며, 보고서 내용의 정확도를 뜻하지 않는다. 모델 선정과 평가에 같은 질문을 사용했으므로 탐색용 비교 결과로 본다 (보고서 정확도는 위 Grounding 검증과 사람 검토로 별도 관리)
 - 기술 논문은 CXL, QJL, Lloyd-Max 같은 고유 용어가 많아 BM25가 강했고, 둘을 결합한 Hybrid가 Hit@1과 MRR이 가장 높아 최종 검색기로 채택. 에이전트가 상위 청크 위주로 근거를 쓰기 때문에 상위 순위 정확도(MRR)를 우선함
 
 
 ## Agents
 | Agent | 역할 | RAG | 출력(State key) |
 |---|---|---|---|
-| 🔍 기술 조사 (`tech_research`) | 논문에서 핵심 방식·저자 보고 성과·실험 조건·한계 추출 후 Reflection 검증 | O | `tech_profiles` |
-| 📊 시장성 평가 (`market_evaluation`) | M1 시장 규모·성장성 / M2 상용화·채택 / M3 생태계 지지 평가 (웹 중심 + 논문으로 구현 수준 확인) | O + Web | `market_eval` |
-| 🏭 도메인 평가 (`domain_evaluation`) | 데이터센터·클라우드 서빙 기준 D1 비용 효율 / D2 처리량·지연 / D3 품질 유지 / D4 도입 용이성 평가 (논문 실험 중심 + 웹 보강) | O + Web | `domain_eval` |
+| 🔍 기술 조사 (`tech_research`) | 논문에서 핵심 방식·저자 보고 성과·실험 조건·한계 추출 → 원문 대조 검증 | O | `tech_profiles` |
+| 📊 시장성 평가 (`market_evaluation`) | M1 시장 규모·성장성 / M2 상용화·채택 / M3 생태계 지지 평가 (웹 중심 + 논문으로 구현 수준 확인) → 원문 대조 검증 | O + Web | `market_eval` |
+| 🏭 도메인 평가 (`domain_evaluation`) | 데이터센터·클라우드 서빙 기준 D1 비용 효율 / D2 처리량·지연 / D3 품질 유지 / D4 도입 용이성 평가 (논문 실험 중심 + 웹 보강) → 원문 대조 검증 | O + Web | `domain_eval` |
 | ⚖️ 평가 종합 (`synthesis`) | 관점 간 일치·상충 지점, 두 기술의 인식 차이, 보완 가능성 도출 | X | `synthesis` |
 | 📝 보고서 생성 (`report_writer`) | 목차에 맞춰 보고서 작성, 인용 번호화·REFERENCE 생성 | X | `report_md` |
-| ✅ 보고서 검토 (`reviewer`) | 규칙 검사 + LLM-as-a-Judge, 재작성 여부 결정 | X | `review` |
+| ✅ 보고서 검토 (`reviewer`) | 규칙 검사(수치-원문 대조 포함) + LLM-as-a-Judge, 재작성·미통과 여부 결정 | X | `review` |
 | 💾 저장 (`exporter`) | MD / HTML / PDF 및 중간 결과 저장 | X | `outputs` |
 
 ### 평가 기준 (등급 : 높음 / 중간 / 낮음 / 판단 유보, 높을수록 해당 관점에서 유리하게 인식됨)
@@ -88,7 +95,7 @@ Multi-Agent + Agentic RAG 시스템입니다. 특정 기술을 추천하거나 �
 | 시장성 | M3 | 생태계 지지 | 지원 프레임워크(vLLM, SGLang, TensorRT-LLM), 표준화, 벤더 참여 |
 | 도메인 | D1 | 비용 효율 (TCO) | 같은 워크로드에 필요한 GPU·메모리 비용 절감 여지 |
 | 도메인 | D2 | 처리량·지연 | 대규모 동시 요청 환경의 throughput, latency, SLO 영향 |
-| 도메인 | D3 | 품질 유지 | 정확도·출력 품질 손실 위험 |
+| 도메인 | D3 | 품질 유지 | 정확도·출력 품질 손실 위험 (정확도 지표만 인정, 지연·처리량 수치는 제외) |
 | 도메인 | D4 | 도입 용이성 | 기존 GPU 클러스터·서빙 스택 호환성, 추가 하드웨어, 운영 복잡도 |
 
 기준별 등급 루브릭은 [`prompts/criteria.py`](prompts/criteria.py)에 정의되어 있습니다.
@@ -98,14 +105,15 @@ Multi-Agent + Agentic RAG 시스템입니다. 특정 기술을 추천하거나 �
 ```mermaid
 graph TD
     START([START]) --> TR[🔍 기술 조사<br/>Agentic RAG + Reflection]
-    TR --> MK[📊 시장성 평가<br/>RAG + Web]
-    TR --> DM[🏭 도메인 평가<br/>RAG + Web]
+    TR --> MK[📊 시장성 평가<br/>RAG + Web + 원문 대조 검증]
+    TR --> DM[🏭 도메인 평가<br/>RAG + Web + 원문 대조 검증]
     MK --> SY[⚖️ 평가 종합]
     DM --> SY
     SY --> RW[📝 보고서 생성]
     RW --> RV{✅ 보고서 검토}
     RV -- revise --> RW
-    RV -- approve --> EX[💾 저장 MD/HTML/PDF]
+    RV -- approve --> EX[💾 저장 MD/HTML/PDF<br/>+ review.md]
+    RV -- unverified<br/>재작성 한도 도달 --> EX
     EX --> END([END])
 ```
 
@@ -128,7 +136,7 @@ graph LR
 | `domain_eval` | dict | domain_evaluation | 기술별 도메인 평가 |
 | `synthesis` | dict | synthesis | 일치·상충 지점, 인식 차이, 보완 가능성 |
 | `report_md` | str | report_writer | 인용·REFERENCE가 반영된 보고서 |
-| `review` | dict | reviewer | 통과 여부, 수정 지시, PDF 페이지 수 |
+| `review` | dict | reviewer | 통과 여부, critical / minor 수정 지시, PDF 페이지 수 |
 | `revision_count` | int | report_writer | 재작성 횟수 (Loop 종료 조건) |
 | `sources` | list (reducer: add) | 조사·평가 노드 | 인용 가능한 출처 레지스트리 (논문 + 웹) |
 | `trace` | list (reducer: add) | 조사·평가 노드 | RAG 검색·판정·재작성 로그 |
@@ -150,6 +158,7 @@ graph LR
 │   ├── synthesis.py        #   평가 종합
 │   ├── report_writer.py    #   보고서 생성 + REFERENCE 자동화
 │   ├── reviewer.py         #   보고서 검토 (규칙 + LLM Judge)
+│   ├── grounding.py        #   수치-원문 대조 검사
 │   ├── exporter.py         #   MD / HTML / PDF 저장
 │   ├── schemas.py          #   구조화 출력 스키마
 │   └── common.py           #   병렬 실행, 웹 출처 레지스트리
@@ -183,7 +192,8 @@ uv run python scripts/eval_retrieval.py
 # 4. 보고서 생성 (논문 다운로드·인덱싱 자동 수행)
 uv run python app.py --pdf-name "RAG-Output_판교_6반_권유나.pdf"
 ```
-- 결과 : `outputs/` 에 PDF / Markdown / HTML 보고서, `run_state.json`(에이전트별 중간 결과·검색 로그), `graph.mmd`
+- 결과 : `outputs/` 에 PDF / Markdown / HTML 보고서, `review.md`(자동 검토 결과·잔여 의견), `run_state.json`(에이전트별 중간 결과·검색 로그), `graph.mmd`
+- 제출본 생성 실행의 자동 검토 결과는 **미통과(critical 3건 : 일부 문장의 인용 누락, 표현 뉘앙스)** 이며, 잔여 의견은 `outputs/review.md`에 있습니다. 수치 오류는 규칙 검사 기준으로 남아 있지 않습니다.
 - 한글 PDF 폰트는 macOS의 Arial Unicode를 자동으로 찾습니다. 다른 환경에서는 `.env`에 `PDF_FONT_PATH`를 지정하세요.
 - 논문 PDF는 저작권 문제로 저장소에 포함하지 않고, 실행할 때 arXiv에서 내려받습니다.
 

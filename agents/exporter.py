@@ -22,7 +22,17 @@ def make_exporter_node(pdf_name: str):
         snapshot["sources"] = [{k: v for k, v in s.items() if k != "content"} for s in state["sources"]]
         (OUTPUT_DIR / "run_state.json").write_text(json.dumps(snapshot, ensure_ascii=False, indent=1), encoding="utf-8")
 
-        print(f"[exporter] {pdf_path.name} ({pages}p) 저장")
-        return {"outputs": {"md": str(md_path), "html": str(html_path), "pdf": str(pdf_path), "pages": pages}}
+        review = state["review"]
+        review_path = OUTPUT_DIR / "review.md"
+        status = "통과" if review["passed"] else "미통과 - 아래 잔여 의견을 사람이 확인해야 함"
+        review_path.write_text(
+            f"# 자동 검토 결과 : {status}\n\n- 재작성 횟수 : {state.get('revision_count', 0)}\n- PDF 페이지 : {pages}\n\n"
+            + "## 필수 수정(critical)\n" + ("".join(f"- {i}\n" for i in review["issues"]) or "- 없음\n")
+            + "\n## 개선 제안(minor)\n" + ("".join(f"- {i}\n" for i in review.get("minor", [])) or "- 없음\n"),
+            encoding="utf-8",
+        )
+        print(f"[exporter] {pdf_path.name} ({pages}p) 저장 - 자동 검토 {status}")
+        return {"outputs": {"md": str(md_path), "html": str(html_path), "pdf": str(pdf_path), "pages": pages,
+                            "review": str(review_path), "review_passed": review["passed"]}}
 
     return exporter
