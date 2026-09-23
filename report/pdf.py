@@ -25,7 +25,7 @@ from config import DOMAIN, REPORT_AUTHOR, TECHNOLOGIES
 
 RATING_CLASS = {"높음": "high", "중간": "mid", "낮음": "low", "판단 유보": "hold"}
 # 열 개수별 칸 너비(%) : 8열 = 관점별 평가표, 3열 = 기술 선정표
-COLUMN_WIDTHS = {8: (6, 10, 11, 7, 27, 8, 7, 24), 3: (7, 13, 80)}
+COLUMN_WIDTHS = {8: (6, 10, 11, 7, 24.5, 11, 7, 23.5), 3: (7, 13, 80), 4: (19, 27, 30, 24)}
 
 CSS = """
 @page { size: A4; margin: 16mm 15mm 16mm 15mm; }
@@ -80,14 +80,14 @@ th {
   background: var(--bg-soft); color: var(--muted); font-weight: 600; text-align: left;
   padding: 6px 6px; border: 1px solid var(--line); font-size: 7.8pt; overflow-wrap: normal;
 }
-td { padding: 6px 8px; border: 1px solid var(--line); vertical-align: top; }
+td { padding: 6px 8px; border: 1px solid var(--line); vertical-align: top; overflow: hidden; }
 td.muted { color: var(--muted); white-space: nowrap; }
 td.center, th.center { text-align: center; }
 td.nowrap { font-weight: 500; }
 
 .pill {
-  display: inline-block; border-radius: 4px; padding: 1px 7px; font-weight: 600;
-  font-size: 8.2pt; white-space: nowrap;
+  display: inline-block; border-radius: 4px; padding: 1px 6px; font-weight: 600;
+  font-size: 8.2pt; max-width: 100%; white-space: normal; word-break: keep-all; text-align: center;
 }
 .pill.high { background: var(--green-bg); color: var(--green); }
 .pill.mid { background: var(--orange-bg); color: var(--orange); }
@@ -139,7 +139,8 @@ def _style_tables(body: str) -> str:
         table = re.sub(r"<tr>\s*(?:<td[^>]*>.*?</td>\s*)+</tr>", style_row, table, flags=re.S)
         # 칸 너비 고정 : 근거 요약 칸에 폭을 몰아준다
         widths = COLUMN_WIDTHS.get(len(headers))
-        if widths and len(headers) == 8 or (widths and headers[:1] == ["진영"]):
+        # 8열 평가표, 기술 선정표(진영), 시사점표(주제)
+        if widths and (len(headers) == 8 or headers[:1] in (["진영"], ["주제"])):
             cols = "".join(f'<col style="width:{w}%">' for w in widths)
             table = table.replace("<table>", f'<table class="fixed"><colgroup>{cols}</colgroup>', 1)
         if len(re.findall(r"<tr>", table)) <= 9:   # 머리글 + 데이터 8행 이하

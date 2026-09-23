@@ -51,14 +51,14 @@ th {
   background: var(--bg-soft); color: var(--muted); font-weight: 600; text-align: left;
   padding: 6px 6px; border: 1px solid var(--line); font-size: 7.8pt; overflow-wrap: normal;
 }
-td { padding: 6px 8px; border: 1px solid var(--line); vertical-align: top; }
+td { padding: 6px 8px; border: 1px solid var(--line); vertical-align: top; overflow: hidden; }
 td.muted { color: var(--muted); white-space: nowrap; }
 td.center, th.center { text-align: center; }
 td.nowrap { font-weight: 500; }
 
 .pill {
-  display: inline-block; border-radius: 4px; padding: 1px 7px; font-weight: 600;
-  font-size: 8.2pt; white-space: nowrap;
+  display: inline-block; border-radius: 4px; padding: 1px 6px; font-weight: 600;
+  font-size: 8.2pt; max-width: 100%; white-space: normal; word-break: keep-all; text-align: center;
 }
 .pill.high { background: var(--green-bg); color: var(--green); }
 .pill.mid { background: var(--orange-bg); color: var(--orange); }
@@ -112,7 +112,7 @@ h2.new-page { break-before: page; page-break-before: always; margin-top: 0; }
 </ul>
 <h2>4. 관점별 평가</h2>
 <h3>4.1 시장성 관점</h3>
-<div class="keep"><table class="fixed"><colgroup><col style="width:6%"><col style="width:10%"><col style="width:11%"><col style="width:7%"><col style="width:27%"><col style="width:8%"><col style="width:7%"><col style="width:24%"></colgroup>
+<div class="keep"><table class="fixed"><colgroup><col style="width:6%"><col style="width:10%"><col style="width:11%"><col style="width:7%"><col style="width:24.5%"><col style="width:11%"><col style="width:7%"><col style="width:23.5%"></colgroup>
 <thead>
 <tr>
 <th>기준 ID</th>
@@ -138,7 +138,7 @@ h2.new-page { break-before: page; page-break-before: always; margin-top: 0; }
 <li><strong>생태계 지지</strong>: TurboQuant은 vLLM·SGLang 기반 구현이 보고됐으나 공식 기본 기능 탑재는 확인되지 않았다. ITME는 vLLM 기반 구현 외에 공식 다중 프레임워크 지원·표준화 참여 근거가 없다.</li>
 </ul>
 <h3>4.2 도메인 적용 관점: 데이터센터·클라우드 LLM 서빙</h3>
-<div class="keep"><table class="fixed"><colgroup><col style="width:6%"><col style="width:10%"><col style="width:11%"><col style="width:7%"><col style="width:27%"><col style="width:8%"><col style="width:7%"><col style="width:24%"></colgroup>
+<div class="keep"><table class="fixed"><colgroup><col style="width:6%"><col style="width:10%"><col style="width:11%"><col style="width:7%"><col style="width:24.5%"><col style="width:11%"><col style="width:7%"><col style="width:23.5%"></colgroup>
 <thead>
 <tr>
 <th>기준 ID</th>
@@ -166,7 +166,7 @@ h2.new-page { break-before: page; page-break-before: always; margin-top: 0; }
 <li><strong>도입 용이성</strong>: TurboQuant은 소프트웨어 변경만으로 도입 가능하나 대규모 분산 환경 검증이 부족하다. ITME는 신규 하드웨어 및 복잡한 시스템 통합이 요구된다.</li>
 </ul>
 <h2>5. 시사점</h2>
-<div class="keep"><table>
+<div class="keep"><table class="fixed"><colgroup><col style="width:19%"><col style="width:27%"><col style="width:30%"><col style="width:24%"></colgroup>
 <thead>
 <tr>
 <th>주제</th>
