@@ -11,6 +11,7 @@ from report.pdf import count_pages
 
 REQUIRED_SECTIONS = ["SUMMARY", "1. 분석 배경", "2. 기술 선정", "3. 기술 개요", "4. 관점별 평가",
                      "5. 시사점", "6. 한계점", "REFERENCE"]
+SUMMARY_MAX_CHARS = 1200
 BIAS_WORDS = ["추천한다", "더 우수", "우월", "승자", "유리하다"]
 
 
@@ -25,8 +26,9 @@ def rule_check(report_md: str) -> tuple[list[str], int]:
     if headings and not headings[-1].startswith("REFERENCE"):
         issues.append("마지막 섹션이 REFERENCE가 아님")
     summary = re.search(r"##\s+SUMMARY(.*?)\n##\s", report_md, flags=re.S)
-    if summary and len(summary.group(1).strip()) > 900:
-        issues.append(f"SUMMARY가 {len(summary.group(1).strip())}자로 길다 - 700자 이내로 줄일 것")
+    # 가이드 : SUMMARY 는 1/2 페이지 이내. 현재 PDF 서식에서 반 페이지는 약 1,200자(인용 포함)
+    if summary and len(summary.group(1).strip()) > SUMMARY_MAX_CHARS:
+        issues.append(f"SUMMARY가 {len(summary.group(1).strip())}자로 반 페이지를 넘는다 - {SUMMARY_MAX_CHARS}자 이내로 줄일 것")
     for w in BIAS_WORDS:
         if w in report_md:
             issues.append(f"우열 판정 표현 '{w}' 사용 - 중립적 표현으로 수정")

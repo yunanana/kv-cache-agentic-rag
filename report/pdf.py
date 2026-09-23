@@ -74,6 +74,7 @@ table {
   break-inside: auto;
 }
 table.fixed { table-layout: fixed; }
+.keep { break-inside: avoid; page-break-inside: avoid; }
 tr { break-inside: avoid; }
 th {
   background: var(--bg-soft); color: var(--muted); font-weight: 600; text-align: left;
@@ -140,6 +141,8 @@ def _style_tables(body: str) -> str:
         if widths and len(headers) == 8 or (widths and headers[:1] == ["진영"]):
             cols = "".join(f'<col style="width:{w}%">' for w in widths)
             table = table.replace("<table>", f'<table class="fixed"><colgroup>{cols}</colgroup>', 1)
+        if len(re.findall(r"<tr>", table)) <= 9:   # 머리글 + 데이터 8행 이하
+            table = f'<div class="keep">{table}</div>'
         return table
 
     return re.sub(r"<table>.*?</table>", style_table, body, flags=re.S)
