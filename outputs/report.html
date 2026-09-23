@@ -65,6 +65,7 @@ td.nowrap { font-weight: 500; }
 .pill.low { background: var(--red-bg); color: var(--red); }
 .pill.hold { background: var(--gray-bg); color: var(--muted); }
 
+h2.new-page { break-before: page; page-break-before: always; margin-top: 0; }
 .references ol { padding-left: 22px; }
 .references li { font-size: 8.2pt; color: var(--muted); margin: 3px 0; }
 .references a, a { color: var(--muted); text-decoration: underline; text-decoration-color: #c8c7c4; }
@@ -190,7 +191,7 @@ td.nowrap { font-weight: 500; }
 <h2>6. 한계점</h2>
 <p>본 보고서는 공개된 논문 및 웹 자료를 기반으로 평가하였으며, 각 기술의 저자 자체 실험 결과에 의존하는 부분이 많다. 공개 정보의 한계로 인해 상용화 현황, 대규모 분산 환경 적용, 다양한 하드웨어 플랫폼에서의 성능 검증 등에서 정보가 부족하다. 확증편향 방지를 위해 다수 출처를 교차 검증하고, 기술별 주장과 반대 근거를 균형 있게 반영하였다.</p>
 <p>본 보고서는 멀티 에이전트 시스템이 생성한 초안의 자동 검토 미통과 항목에 대해 AI 도구로 논문·웹 출처를 대조하고 정정한 정정본이다. 이는 독립적인 사람 검수나 자동 검토 통과를 의미하지 않는다. 웹 출처는 대부분 블로그·시장조사 요약 등 2차 자료이며, 시장 규모 수치는 조사기관의 추정치다.</p>
-<h2>REFERENCE</h2><div class="references">
+<h2 class="new-page">REFERENCE</h2><div class="references">
 <ol>
 <li>Zandieh, A., Daliri, M., Hadian, M., &amp; Mirrokni, V.(2025). TurboQuant: Online Vector Quantization with Near-optimal Distortion Rate. <em>arXiv</em>, 2504.19874. <a href="https://arxiv.org/abs/2504.19874">https://arxiv.org/abs/2504.19874</a></li>
 <li>Jang, H., Min, Y., Kim, S., Ahn, T., Kim, H., Joo, Y., Kim, H., &amp; Kim, J.(2026). ITME: Inference Tiered Memory Expansion with Disaggregated CXL-Hybrid Memories. <em>arXiv</em>, 2606.12556. <a href="https://arxiv.org/abs/2606.12556">https://arxiv.org/abs/2606.12556</a></li>

@@ -94,6 +94,7 @@ td.nowrap { font-weight: 500; }
 .pill.low { background: var(--red-bg); color: var(--red); }
 .pill.hold { background: var(--gray-bg); color: var(--muted); }
 
+h2.new-page { break-before: page; page-break-before: always; margin-top: 0; }
 .references ol { padding-left: 22px; }
 .references li { font-size: 8.2pt; color: var(--muted); margin: 3px 0; }
 .references a, a { color: var(--muted); text-decoration: underline; text-decoration-color: #c8c7c4; }
@@ -159,7 +160,8 @@ def _decorate(body: str) -> str:
     parts = re.split(r"(<h2>REFERENCE</h2>)", body, maxsplit=1)
     if len(parts) == 3:
         refs = re.sub(r"(https?://[^\s<]+)", r'<a href="\1">\1</a>', parts[2])
-        body = parts[0] + parts[1] + f'<div class="references">{refs}</div>'
+        # REFERENCE 는 항상 새 페이지에서 시작
+        body = parts[0] + '<h2 class="new-page">REFERENCE</h2>' + f'<div class="references">{refs}</div>'
     return _style_tables(body)
 
 
