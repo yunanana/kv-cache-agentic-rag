@@ -194,7 +194,7 @@ uv run python scripts/eval_retrieval.py
 uv run python app.py --pdf-name "RAG-Output_판교_6반_권유나.pdf"
 ```
 - 결과 : `outputs/` 에 PDF / Markdown / HTML 보고서, `review.md`(자동 검토 결과·잔여 의견), `run_state.json`(에이전트별 중간 결과·검색 로그), `graph.mmd`
-- 제출본은 **사람 검수본**입니다. 에이전트 실행 결과가 자동 검토를 통과하지 못해, 작성자가 인용 논문 페이지와 웹 출처 원문을 직접 대조해 사실·인용 오류를 정정했습니다. 검수 항목과 정정 내역은 `outputs/review.md`에 있고, `run_state.json`·`run.log`는 정정 전 실행 기록입니다. 정정본 렌더링 : `uv run python scripts/render_existing_report.py`
+- 제출본은 **AI 도구 보조 정정본**입니다. 에이전트 실행 결과가 자동 검토를 통과하지 못해, 검토 미통과 항목에 대해 AI 도구로 인용 논문 페이지와 웹 출처를 대조하고 정정했습니다. 이는 독립적인 사람 검수나 자동 검토 통과를 의미하지 않습니다. 대조·정정 내역은 `outputs/review.md`에 있고, `run_state.json`·`run.log`는 정정 전 실행 기록입니다. 정정본 렌더링 : `uv run python scripts/render_existing_report.py`
 - 네트워크 없는 회귀 테스트: `.venv/bin/python -B -m unittest discover -s tests -v`
 - 한글 PDF 폰트는 macOS의 Arial Unicode를 자동으로 찾습니다. 다른 환경에서는 `.env`에 `PDF_FONT_PATH`를 지정하세요.
 - 논문 PDF는 저작권 문제로 저장소에 포함하지 않고, 실행할 때 arXiv에서 내려받습니다.
